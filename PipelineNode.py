@@ -1,24 +1,24 @@
-from PyQt5.QtWidgets import *
-from qtsalome import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMenu, QAction
+from PyQt5.QtGui import QStandardItem
+from PyQt5.QtCore import Qt, QTimer
 
 class PipelineNode(QStandardItem):
-    def __init__(self, paramtype, value):
-        super().__init__(value.name)
-        self.type = paramtype
-        self.value = value
+    # Should be abstract but not sure if it is possible
+    def __init__(self, parent_widget, name):
+        super().__init__(name)
+        self.name = name
         self.children = []
+        self.parent_node = None
+        self.parent_widget = parent_widget
 
     def contextMenuEvent(self, event):
-        menu = QMenu()
-        action = QAction(None)
-        action.triggered.connect(self.handleCustomAction)
-        menu.addAction(action)
+        pass
 
-        menu.exec_(event.globalPos())
+    def add_child(self, child):
+        self.children.append(child)
+        child.parent_node = self
 
-    def add_child(self, node):
-        self.children.append(node)
-
-    def handleCustomAction(self):
-        print(f"Custom action triggered for node: {self.value.name}")
+    def remove_child(self, child):
+        if child in self.children:
+            self.children.remove(child)
+            self.parent_widget.update_view()
