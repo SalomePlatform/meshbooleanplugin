@@ -1,11 +1,14 @@
 from PyQt5.QtWidgets import QMenu, QAction
 from PyQt5.QtGui import QStandardItem, QIcon
-from PipelineNode import PipelineNode
+from MeshBooleanPlugin.pipeline.PipelineNode import PipelineNode
 
 class FillingNode(PipelineNode):
     def __init__(self, parent_widget, name):
         super().__init__(parent_widget, name)
-        
+        icon = QIcon()
+        icon.addFile("mesh_pyramid.png")
+        self.setIcon(icon)
+
     def contextMenuEvent(self, event):
         menu = QMenu()
         edit_action = QAction(None)

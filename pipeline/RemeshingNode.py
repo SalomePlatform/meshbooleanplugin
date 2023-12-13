@@ -1,10 +1,13 @@
 from PyQt5.QtWidgets import QMenu, QAction
 from PyQt5.QtGui import QStandardItem, QIcon
-from PipelineNode import PipelineNode
+from MeshBooleanPlugin.pipeline.PipelineNode import PipelineNode
 
 class RemeshingNode(PipelineNode):
     def __init__(self, parent_widget, name):
         super().__init__(parent_widget, name)
+        icon = QIcon()
+        icon.addFile("mmg_logo.jpg")
+        self.setIcon(icon)
         
     def contextMenuEvent(self, event):
         menu = QMenu()

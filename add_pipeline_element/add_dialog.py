@@ -15,25 +15,36 @@ class AddDialog(Ui_AddDialog, QWidget):
     self.PB_Help.clicked.connect(self.PBHelpPressed)
 
   def PBHelpPressed(self):
-    QMessageBox.about(None, "About this MMG remeshing tool",
+    QMessageBox.about(None, "About this Dialog",
             """
-                    Adapt your mesh with MMG
-                    -------------------------------------------
+This Dialog allows you to add an element to the lesh pipeline
+of this plugin. You can add:
+- A boolean operation:
+    It requires you to choose two input meshes, a boolean
+    operator, and a boolean engine. It displays some
+    information about the engine that you chose.
 
-This tool allows your to adapt your mesh after a
-Boolean operation. It also allows you to repair a
-bad mesh (double elements or free elements).
+- A remeshing with MMG:
+    This tool allows your to adapt your mesh after a
+    Boolean operation. It also allows you to repair a
+    bad mesh (double elements or free elements).
 
-By default, your mesh will be prepared for MMG.
-You can find the options to disable it or
-explicitely generate the repaired mesh in the
-'Advanced Remeshing Options' panel.
-By pressing the 'Remesh' button, your mesh will
-be adapted by MMG with your selected parameters.
-You can change the parameters to better fit you
-needs than with the default ones. Restore the
-default parameters by clicking on the 'Compute
-Default Values' button.
+    By default, your mesh will be prepared for MMG.
+    You can find the options to disable it or
+    explicitely generate the repaired mesh in the
+    'Advanced Remeshing Options' panel.
+    By pressing the 'Remesh' button, your mesh will
+    be adapted by MMG with your selected parameters.
+    You can change the parameters to better fit you
+    needs than with the default ones. Restore the
+    default parameters by clicking on the 'Compute
+    Default Values' button.
+
+- A filling with Gmsh:
+    This tool can fill surface meshes with tetrahedra.
+
+Once all the needed fields filled, press Aply to compute the
+result of the pipeline element.
             """)
 
   def PBCancelPressed(self):

@@ -2,10 +2,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
-from PipelineNode import PipelineNode
-from BooleanNode import BooleanNode
-from RemeshingNode import RemeshingNode
-from FillingNode import FillingNode
+from MeshBooleanPlugin.pipeline.PipelineNode import PipelineNode
+from MeshBooleanPlugin.pipeline.BooleanNode import BooleanNode
+from MeshBooleanPlugin.pipeline.RemeshingNode import RemeshingNode
+from MeshBooleanPlugin.pipeline.FillingNode import FillingNode
 
 class CustomTreeView(QTreeView):
     def mousePressEvent(self, event):
@@ -44,10 +44,12 @@ class PipelineWidget(QWidget):
 
         # BooleanNode, FillingNode and Remeshing nodes are implementations of
         # PipelineNode. They will have behavior later.
-        self.root_node = BooleanNode(self, 'Root')
-        child1_node = BooleanNode(self, 'Child1')
+        self.root_node = PipelineNode(self, 'Root')
+        child2_node = BooleanNode(self, 'Boolean_1')
+        self.root_node.add_child(child2_node)
+        child1_node = RemeshingNode(self, 'Remeshing_1')
         self.root_node.add_child(child1_node)
-        child2_node = FillingNode(self, 'Child2')
+        child2_node = FillingNode(self, 'Filling_1')
         self.root_node.add_child(child2_node)
         self.update_view()
 

@@ -154,7 +154,7 @@
   <customwidget>
    <class>PipelineWidget</class>
    <extends>QWidget</extends>
-   <header>PipelineWidget</header>
+   <header>MeshBooleanPlugin.pipeline.PipelineWidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
