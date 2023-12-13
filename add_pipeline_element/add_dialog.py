@@ -1,7 +1,7 @@
-from MeshBooleanPlugin.MyPlugDialog_ui import Ui_MyPlugDialog
+from MeshBooleanPlugin.add_pipeline_element.AddDialog_ui import Ui_AddDialog
 from qtsalome import *
 
-class AddDialog(Ui_MyPlugDialog, QWidget):
+class AddDialog(Ui_AddDialog, QWidget):
   def __init__(self, parent=None):
     QWidget.__init__(self, parent)
     self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)

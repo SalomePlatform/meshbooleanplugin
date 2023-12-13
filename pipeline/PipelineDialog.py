@@ -29,14 +29,14 @@ from MeshBooleanPlugin.myViewText import MyViewText
 from qtsalome import *
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-from MeshBooleanPlugin.pipeline_ui import Ui_PipelineDialog
-from MeshBooleanPlugin.add_dialog import AddDialog
+from MeshBooleanPlugin.pipeline.pipeline_ui import Ui_PipelineDialog
+from MeshBooleanPlugin.add_pipeline_element.add_dialog import AddDialog
 
 verbose = True
 
 REMESHER_DICT = { 'MMGS' : 0, 'MMG2D' : 1, 'MMG3D' : 2 }
 
-class MyMmgPlugDialog(Ui_PipelineDialog,QWidget):
+class PipelineDialog(Ui_PipelineDialog,QWidget):
   """
   """
   def __init__(self):
@@ -104,7 +104,7 @@ def getDialog():
   """
   global __dialog
   if __dialog is None:
-    __dialog = MyMmgPlugDialog()
+    __dialog = PipelineDialog()
   #else :
   #  __dialog.clean()
   return __dialog

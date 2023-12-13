@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MMG : Remeshing tool</string>
+   <string>Pipeline for boolean mesh cutting</string>
   </property>
   <property name="sizeGripEnabled" stdset="0">
    <bool>true</bool>
