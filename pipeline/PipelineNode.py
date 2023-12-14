@@ -17,8 +17,15 @@ class PipelineNode(QStandardItem):
     def add_child(self, child):
         self.children.append(child)
         child.parent_node = self
+        self.pretty_print()
+        self.parent_widget.update_view()
 
     def remove_child(self, child):
         if child in self.children:
             self.children.remove(child)
             self.parent_widget.update_view()
+
+    def pretty_print(self, indent=0):
+        print(indent*' ' + self.name)
+        for child in self.children:
+            child.pretty_print(indent+1)

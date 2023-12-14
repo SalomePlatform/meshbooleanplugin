@@ -1,3 +1,4 @@
+import os
 from MeshBooleanPlugin.add_pipeline_element.AddDialog_ui import Ui_AddDialog
 from qtsalome import *
 
@@ -8,6 +9,27 @@ class AddDialog(Ui_AddDialog, QWidget):
     self.setupUi(self)
     self.resize( QSize(1000,600).expandedTo(self.minimumSizeHint()) )
     self.connecterSignaux()
+    self.iconfolder=os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "resources", "smesh")
+    icon = QIcon()
+    icon.addFile(os.path.join(self.iconfolder,"select1.png"))
+    self.PB_MeshSmesh_L.setIcon(icon)
+    self.PB_MeshSmesh_R.setIcon(icon)
+    self.PB_MeshSmesh_Remeshing.setIcon(icon)
+    self.PB_MeshSmesh_Filling.setIcon(icon)
+    self.PB_MeshSmesh_L.setToolTip("source mesh from Salome Object Browser")
+    self.PB_MeshSmesh_R.setToolTip("source mesh from Salome Object Browser")
+    self.PB_MeshSmesh_Remeshing.setToolTip("source mesh from Salome Object Browser")
+    self.PB_MeshSmesh_Filling.setToolTip("source mesh from Salome Object Browser")
+    icon = QIcon()
+    icon.addFile(os.path.join(self.iconfolder,"open.png"))
+    self.PB_MeshFile_L.setIcon(icon)
+    self.PB_MeshFile_R.setIcon(icon)
+    self.PB_MeshFile_Remeshing.setIcon(icon)
+    self.PB_MeshFile_Filling.setIcon(icon)
+    self.PB_MeshFile_L.setToolTip("source mesh from a file in disk")
+    self.PB_MeshFile_R.setToolTip("source mesh from a file in disk")
+    self.PB_MeshFile_Remeshing.setToolTip("source mesh from a file in disk")
+    self.PB_MeshFile_Filling.setToolTip("source mesh from a file in disk")
     self.show()
 
   def connecterSignaux(self) :

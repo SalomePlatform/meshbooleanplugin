@@ -37,7 +37,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="boolean">
         <attribute name="title">
@@ -652,7 +652,7 @@
                  </spacer>
                 </item>
                 <item row="1" column="0">
-                 <widget class="QComboBox" name="COB_Remesher_2">
+                 <widget class="QComboBox" name="COB_Remesher">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -677,7 +677,7 @@
                  </widget>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QLabel" name="label_Remesher_2">
+                 <widget class="QLabel" name="label_Remesher">
                   <property name="text">
                    <string>This remesher handles triangular surface meshes in 3D.</string>
                   </property>
@@ -702,7 +702,7 @@
                  <enum>QLayout::SetNoConstraint</enum>
                 </property>
                 <item>
-                 <widget class="QCheckBox" name="CB_SwapEdge_2">
+                 <widget class="QCheckBox" name="CB_SwapEdge">
                   <property name="toolTip">
                    <string>If set, MMG will not prevent edge flipping.</string>
                   </property>
@@ -715,7 +715,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QCheckBox" name="CB_InsertEdge_2">
+                 <widget class="QCheckBox" name="CB_InsertEdge">
                   <property name="toolTip">
                    <string>If set, MMG will not prevent point insertion/deletion.</string>
                   </property>
@@ -728,7 +728,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QCheckBox" name="CB_MoveEdge_2">
+                 <widget class="QCheckBox" name="CB_MoveEdge">
                   <property name="font">
                    <font>
                     <pointsize>10</pointsize>
@@ -791,7 +791,7 @@
                  <number>6</number>
                 </property>
                 <item row="1" column="1">
-                 <widget class="QPushButton" name="PB_MeshFile_2">
+                 <widget class="QPushButton" name="PB_MeshFile_Remeshing">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                     <horstretch>1</horstretch>
@@ -821,7 +821,7 @@
                  </widget>
                 </item>
                 <item row="0" column="2">
-                 <widget class="QLineEdit" name="LE_MeshSmesh_2">
+                 <widget class="QLineEdit" name="LE_MeshSmesh_Remeshing">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -862,7 +862,7 @@
                  </spacer>
                 </item>
                 <item row="1" column="2">
-                 <widget class="QLineEdit" name="LE_MeshFile_2">
+                 <widget class="QLineEdit" name="LE_MeshFile_Remeshing">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>1</horstretch>
@@ -883,7 +883,7 @@
                  </widget>
                 </item>
                 <item row="0" column="1">
-                 <widget class="QPushButton" name="PB_MeshSmesh_2">
+                 <widget class="QPushButton" name="PB_MeshSmesh_Remeshing">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                     <horstretch>1</horstretch>
@@ -990,7 +990,7 @@
                  </spacer>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QDoubleSpinBox" name="SP_Hmax_2">
+                 <widget class="QDoubleSpinBox" name="SP_Hmax">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -1006,7 +1006,7 @@
                  </widget>
                 </item>
                 <item row="1" column="0">
-                 <widget class="QDoubleSpinBox" name="SP_Hmin_2">
+                 <widget class="QDoubleSpinBox" name="SP_Hmin">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -1067,7 +1067,7 @@ The minimal edge size is set to 0.01 of the bounding box size. </string>
                  </spacer>
                 </item>
                 <item row="3" column="0">
-                 <widget class="QDoubleSpinBox" name="SP_Gradation_2">
+                 <widget class="QDoubleSpinBox" name="SP_Gradation">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -1196,7 +1196,7 @@ By default, the gradation value is of 1.3</string>
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QDoubleSpinBox" name="SP_Geomapp_2">
+                 <widget class="QDoubleSpinBox" name="SP_Geomapp">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -1314,14 +1314,14 @@ By default, the gradation value is of 1.3</string>
                  </spacer>
                 </item>
                 <item row="3" column="0">
-                 <widget class="QCheckBox" name="CB_GenRepair_2">
+                 <widget class="QCheckBox" name="CB_GenRepair">
                   <property name="text">
                    <string>Generate the repaired mesh</string>
                   </property>
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QCheckBox" name="CB_RepairBeforeCompute_2">
+                 <widget class="QCheckBox" name="CB_RepairBeforeCompute">
                   <property name="font">
                    <font>
                     <pointsize>10</pointsize>
@@ -1340,7 +1340,7 @@ By default, the gradation value is of 1.3</string>
                  </widget>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QCheckBox" name="CB_RepairOnly_2">
+                 <widget class="QCheckBox" name="CB_RepairOnly">
                   <property name="toolTip">
                    <string>If set, MMG will not be called and only the repair process will be launched</string>
                   </property>
@@ -1410,7 +1410,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
                  <number>9</number>
                 </property>
                 <item row="0" column="3">
-                 <widget class="QLabel" name="label_info_2">
+                 <widget class="QLabel" name="label_info">
                   <property name="maximumSize">
                    <size>
                     <width>50</width>
@@ -1467,7 +1467,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
                     <item row="0" column="0">
                      <layout class="QGridLayout" name="gridLayout_16" columnstretch="0,0">
                       <item row="1" column="1">
-                       <widget class="QLineEdit" name="LE_SandboxR_2">
+                       <widget class="QLineEdit" name="LE_SandboxR">
                         <property name="minimumSize">
                          <size>
                           <width>0</width>
@@ -1484,7 +1484,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
                        </widget>
                       </item>
                       <item row="1" column="0">
-                       <widget class="QLineEdit" name="LE_SandboxL_2">
+                       <widget class="QLineEdit" name="LE_SandboxL">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                           <horstretch>0</horstretch>
@@ -1539,7 +1539,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
                  </widget>
                 </item>
                 <item row="2" column="3">
-                 <widget class="QPushButton" name="PB_Plus_2">
+                 <widget class="QPushButton" name="PB_Plus">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1636,7 +1636,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
              <number>6</number>
             </property>
             <item row="1" column="1">
-             <widget class="QPushButton" name="PB_MeshFile_L_2">
+             <widget class="QPushButton" name="PB_MeshFile_Filling">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>1</horstretch>
@@ -1666,7 +1666,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
              </widget>
             </item>
             <item row="0" column="2">
-             <widget class="QLineEdit" name="LE_MeshSmesh_L_2">
+             <widget class="QLineEdit" name="LE_MeshSmesh_Filling">
               <property name="minimumSize">
                <size>
                 <width>0</width>
@@ -1707,7 +1707,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
              </spacer>
             </item>
             <item row="1" column="2">
-             <widget class="QLineEdit" name="LE_MeshFile_L_2">
+             <widget class="QLineEdit" name="LE_MeshFile_Filling">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>1</horstretch>
@@ -1728,7 +1728,7 @@ Please, refer to the information tip for the documentation of MMG.</string>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QPushButton" name="PB_MeshSmesh_L_2">
+             <widget class="QPushButton" name="PB_MeshSmesh_Filling">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>1</horstretch>

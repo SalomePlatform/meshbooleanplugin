@@ -53,7 +53,6 @@ class PipelineDialog(Ui_PipelineDialog,QWidget):
     self.resize(800, 600)
     self.NbOptParam = 0
 
-
   def connecterSignaux(self) :
     self.PB_Cancel.clicked.connect(self.PBCancelPressed)
     self.PB_Help.clicked.connect(self.PBHelpPressed)
@@ -72,8 +71,19 @@ You can then edit the pipeline or delete some elements.
     self.close()
 
   def PBAddPipelineElement(self):
-      self.maFenetre = AddDialog()
-      pass
+    self.maFenetre = AddDialog()
+    self.maFenetre.PB_OK.clicked.connect(self.add_pipeline_element)
+
+  def add_pipeline_element(self):
+      tabnum = self.maFenetre.tabWidget.currentIndex()
+      print(tabnum)
+      match tabnum:
+        case 0: # Boolean
+          pass
+        case 1: # Remeshing
+          pass
+        case 2: # Filling
+            pass
 
 __dialog=None
 def getDialog():
