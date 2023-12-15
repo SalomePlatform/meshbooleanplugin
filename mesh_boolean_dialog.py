@@ -210,6 +210,8 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
         smesh.RemoveMesh(self.__selectedMesh)
 
   def update_graph(self):
+    from PyQt5 import QtCore
+    _translate = QtCore.QCoreApplication.translate
     data = []
     if self.COB_Metric.currentIndex() == METRICS_DICT['Execution Time']:
       data = DIFFERENCE_TIME_DATA
@@ -236,6 +238,15 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       if val == self.COB_Metric.currentIndex():
         metric = key
     self.QP_Benchmark.setAxisTitle(qwt.QwtPlot.yLeft, metric)
+    operator = ''
+    for key, val in OPERATOR_DICT.items():
+      if val == self.COB_Operator.currentIndex():
+        operator = key
+    engine = ''
+    for key, val in ENGINE_DICT.items():
+      if val == self.COB_Engine.currentIndex():
+        engine = key
+    self.label_Graph_Title.setText(_translate("MyPlugDialog", f"<-\nPerformences of {engine} on the {operator.lower()} operator, measuring the {metric.lower()}."))
 
     self.QP_Benchmark.replot()
 
