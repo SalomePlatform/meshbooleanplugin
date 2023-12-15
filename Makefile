@@ -1,5 +1,4 @@
 UI_FILES := $(wildcard *.ui)
-UI_FILES += $(wildcard **/*.ui)
 PY_FILES := $(UI_FILES:.ui=_ui.py)
 
 all: $(PY_FILES)

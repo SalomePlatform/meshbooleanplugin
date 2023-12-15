@@ -21,7 +21,7 @@
 # if you already have plugins defined in a salome_plugins.py file, add this file at the end.
 # if not, copy this file as ${HOME}/Plugins/smesh_plugins.py or ${APPLI}/Plugins/smesh_plugins.py
 
-def Mmg(context):
+def MeshBoolean(context):
   # get context study, salomeGui
   study = context.study
   sg = context.sg
@@ -31,6 +31,6 @@ def Mmg(context):
   import tempfile
   from qtsalome import QFileDialog, QMessageBox
   
-  import MeshBooleanPlugin.pipeline.PipelineDialog as PipelineDialog
-  window = PipelineDialog.getDialog()
+  import MeshBooleanPlugin.mesh_boolean_dialog as mesh_boolean_dialog
+  window = mesh_boolean_dialog.getDialog()
   window.show()
