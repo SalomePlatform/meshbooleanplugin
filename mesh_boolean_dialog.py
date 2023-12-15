@@ -37,6 +37,51 @@ verbose = True
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 3 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
         'Interactive And Robust Mesh Booleans' : 3, 'Cork' : 4, 'mcut' : 5}
+METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
+
+NB_TRIANGLES = [972, 1940, 6958, 27320, 110324, 441496, 1765412]
+UNION_TIME_DATA = [[0.1458, 0.2223, 0.5972, 1.8644, 7.4354, 33.7484, 190.1539], # CGAL
+                    [0.1666, 0.2293, 0.247, 0.6063, 1.8354, 6.8085, 33.9464], # igl
+                    [0.4118, 0.6189, 1.5142, 3.673, 11.3241, 52.2387], # VTK
+                    [0.0208, 0.0254, 0.0603, 0.1648, 0.5673, 2.027, 8.3993], # IRMB
+                    [0.0123, 0.0175, 0.0426, 0.1453, 0.6951, 3.4952, 20.1791], # Cork
+                    [0.0279, 0.0413, 0.1113, 0.3806, 1.5812, 7.6355, 31.6626]] # mcut
+
+INTERSECTION_TIME_DATA = [[0.1449, 0.2258, 0.5775, 1.8496, 7.2567, 33.5945, 190.2884], # CGAL
+                    [0.1679, 0.2297, 0.2484, 0.6054, 1.8241, 6.4457, 36.9528], # igl
+                    [0.4118, 0.6183, 1.5209, 3.6708, 10.9282, 55.9625], # VTK
+                    [0.0201, 0.0247, 0.0582, 0.1572, 0.5295, 1.9357, 10.5941], # IRMB
+                    [0.0119, 0.0168, 0.0408, 0.1391, 0.6435, 3.4335, 20.2468], # Cork
+                    [0.0284, 0.0415, 0.1099, 0.3869, 1.6174, 7.7535, 35.3653]] # mcut
+
+DIFFERENCE_TIME_DATA = [[0.1456, 0.2274, 0.6068, 1.8707, 7.3269, 33.8812, 204.5565], # CGAL
+                    [0.1664, 0.2340, 0.2481, 0.6075, 1.8530, 6.6530, 38.7202], # igl
+                    [0.4129, 0.6228, 1.5269, 3.7990, 10.9499, 56.4498], # VTK
+                    [0.0207, 0.0264, 0.0592, 0.1674, 0.5472, 2.5907, 11.4418], # IRMB
+                    [0.0120, 0.0174, 0.0441, 0.1533, 0.6761, 3.5862, 21.3695], # Cork
+                    [0.0206, 0.0328, 0.0907, 0.3942, 1.5381, 7.6089, 34.9195]] # mcut
+
+
+UNION_AVG_QUALITY_DATA = [[0.6390, 0.6744, 0.7384, 0.8186, 0.8761, 0.9114, 0.9309],
+                        [0.6315, 0.6734, 0.7331, 0.8154, 0.8742, 0.9103, 0.9303],
+                        [0.6065, 0.6474, 0.7227, 0.8101, 0.8707, 0.9084],
+                        [0.5958, 0.6503, 0.7237, 0.8077, 0.8698, 0.9086, 0.9278],
+                        [0.6387, 0.6741, 0.7382, 0.8184, 0.8760, 0.9113, 0.9308],
+                        [0.6357, 0.6714, 0.7360, 0.8174, 0.8753, 0.9108, 0.9306]]
+
+INTERSECTION_AVG_QUALITY_DATA = [[0.5895, 0.6424, 0.6993, 0.7928, 0.8592, 0.9030, 0.9266],
+                        [0.5838, 0.6395, 0.6910, 0.7871, 0.8562, 0.9013, 0.9258],
+                        [0.5489, 0.5937, 0.6601, 0.7688, 0.8455, 0.8954],
+                        [0.6261, 0.6769, 0.6831, 0.7874, 0.8550, 0.8996, 0.9356],
+                        [0.5890, 0.6417, 0.6989, 0.7926, 0.8590, 0.9029, 0.9265],
+                        [0.5799, 0.6374, 0.6954, 0.7913, 0.8581, 0.9023, 0.9263]]
+
+DIFFERENCE_AVG_QUALITY_DATA = [[0.6344, 0.7006, 0.7648, 0.8376, 0.8886, 0.9192, 0.9350],
+                        [0.6284, 0.6982, 0.7588, 0.8335, 0.8866, 0.9180, 0.9345],
+                        [0.5983, 0.6605, 0.7347, 0.8207, 0.8793, 0.9142],
+                        [0.5958, 0.6503, 0.7237, 0.7999, 0.8698, 0.9054, 0.9278],
+                        [0.6341, 0.7003, 0.7646, 0.8375, 0.8885, 0.9191, 0.9350],
+                        [0.6318, 0.6878, 0.7676, 0.8374, 0.8907, 0.9164, 0.9360]]
 
 class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   """
@@ -76,9 +121,11 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.PB_MeshFile_R.setIcon(icon)
     self.PB_MeshFile_R.setToolTip("source mesh from a file in disk")
 
+    self.COB_Operator.setCurrentIndex(1) # Needed to trigger the graph update
+    self.COB_Operator.setCurrentIndex(0) # Needed to trigger the graph update
+
     self.resize(800, 600)
     #self.clean()
-    self.NbOptParam = 0
 
     self.maFenetre = None
 
@@ -88,14 +135,19 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.PB_Help.clicked.connect(self.PBHelpPressed)
     self.PB_OK.clicked.connect(self.PBOKPressed)
 
-    self.LE_MeshFile_L.returnPressed.connect(self.meshFileNameChanged)
-    self.LE_MeshSmesh_L.returnPressed.connect(self.meshSmeshNameChanged)
-    self.PB_MeshFile_L.clicked.connect(self.PBMeshFilePressed)
-    self.PB_MeshSmesh_L.clicked.connect(self.PBMeshSmeshPressed)
+    self.LE_MeshFile_L.returnPressed.connect(lambda _: self.meshFileNameChanged("L"))
+    self.LE_MeshSmesh_L.returnPressed.connect(lambda _: self.meshSmeshNameChanged("L"))
+    self.PB_MeshFile_L.clicked.connect(lambda _: self.PBMeshFilePressed("L"))
+    self.PB_MeshSmesh_L.clicked.connect(lambda _: self.PBMeshSmeshPressed("L"))
+    self.LE_MeshFile_R.returnPressed.connect(lambda _: self.meshFileNameChanged("R"))
+    self.LE_MeshSmesh_R.returnPressed.connect(lambda _: self.meshSmeshNameChanged("R"))
+    self.PB_MeshFile_R.clicked.connect(lambda _: self.PBMeshFilePressed("R"))
+    self.PB_MeshSmesh_R.clicked.connect(lambda _: self.PBMeshSmeshPressed("R"))
     #FIXME Do the same for _R
 
     self.COB_Operator.currentIndexChanged.connect(self.DisplayOperatorLabel)
     self.COB_Engine.currentIndexChanged.connect(self.DisplayEngineLabel)
+    self.COB_Metric.currentIndexChanged.connect(self.update_graph)
 
   def GenMedFromAny(self, fileIn):
     if fileIn.endswith('.med'):
@@ -143,6 +195,38 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     if create_mesh:
         smesh.RemoveMesh(self.__selectedMesh)
 
+  def update_graph(self):
+    import qwt
+    data = []
+    if self.COB_Metric.currentIndex() == METRICS_DICT['Execution Time']:
+        data = DIFFERENCE_TIME_DATA
+        if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
+          data = UNION_TIME_DATA
+        elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
+          data = INTERSECTION_TIME_DATA
+    elif self.COB_Metric.currentIndex() == METRICS_DICT['Average Quality']:
+        data = DIFFERENCE_AVG_QUALITY_DATA
+        if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
+          data = UNION_AVG_QUALITY_DATA
+        elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
+          data = INTERSECTION_AVG_QUALITY_DATA
+
+    curve = qwt.QwtPlotCurve("Benchmark curve")
+    curve.setData(NB_TRIANGLES, data[self.COB_Engine.currentIndex()],\
+            len(data[self.COB_Engine.currentIndex()]))
+    self.QP_Benchmark.detachItems()
+    curve.attach(self.QP_Benchmark)
+    self.QP_Benchmark.setAxisAutoScale(True)
+    self.QP_Benchmark.setAxisTitle(qwt.QwtPlot.xBottom, "Number of triangles")
+    metric = ""
+    for key, val in METRICS_DICT.items():
+        if val == self.COB_Metric.currentIndex():
+            metric = key
+    self.QP_Benchmark.setAxisTitle(qwt.QwtPlot.yLeft, metric)
+
+    self.QP_Benchmark.replot()
+
+
   def DisplayOperatorLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
@@ -152,11 +236,11 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       self.label_Operator.setText(_translate("MyPlugDialog", "Compute the intersection of the two meshes selected."))
     else:
       self.label_Operator.setText(_translate("MyPlugDialog", "Compute the difference of the two meshes selected"))
+    self.update_graph()
 
   def DisplayEngineLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
-    print(self.COB_Engine.currentIndex())
     if self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']:
       self.label_Engine.setText(_translate("MyPlugDialog", "Compute with CGAL engine"))
     elif self.COB_Engine.currentIndex() == ENGINE_DICT['igl']:
@@ -169,6 +253,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       self.label_Engine.setText(_translate("MyPlugDialog", "Compute with Cork engine"))
     else:
       self.label_Engine.setText(_translate("MyPlugDialog", "Compute with mcut engine"))
+    self.update_graph()
 
   def PBHelpPressed(self):
     QMessageBox.about(None, "About this MMG remeshing tool",
@@ -318,21 +403,32 @@ Default Values' button.
   def PBCancelPressed(self):
     self.close()
 
-  def PBMeshFilePressed(self):
+  def PBMeshFilePressed(self, zone):
+    """zone = L or R"""
     filter_string = "All mesh formats (*.unv *.cgns *.mesh *.meshb *.med *.stl)"
 
-    fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string + ";;All Files (*)")
+    if zone == 'L':
+        fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string + ";;All Files (*)")
+    else :
+        fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_R.text(), filter_string + ";;All Files (*)")
     if fd.exec_():
       infile = fd.selectedFiles()[0]
-      self.LE_MeshFile_L.setText(infile)
+      if zone == 'L':
+          self.LE_MeshFile_L.setText(infile)
+      else:
+          self.LE_MeshFile_R.setText(infile)
       self.fichierIn=str(infile)
       self.currentName = os.path.splitext(os.path.basename(self.fichierIn))[0]
       self.MeshIn=""
-      self.LE_MeshSmesh_L.setText("")
+      if zone == 'L':
+          self.LE_MeshSmesh_L.setText("")
+      else:
+          self.LE_MeshSmesh_R.setText("")
       self.__selectedMesh=None
       self.isFile = True
 
-  def PBMeshSmeshPressed(self):
+  def PBMeshSmeshPressed(self, zone):
+    """zone = L or R"""
     from omniORB import CORBA
     import salome
     from salome.kernel import studyedit
@@ -358,27 +454,41 @@ Default Values' button.
 
     self.MeshIn=myName
     self.currentName = myName
-    self.LE_MeshSmesh_L.setText(myName)
-    self.LE_MeshFile_L.setText("")
+    if zone == 'L':
+        self.LE_MeshSmesh_L.setText(myName)
+        self.LE_MeshFile_L.setText("")
+    else:
+        self.LE_MeshSmesh_R.setText(myName)
+        self.LE_MeshFile_R.setText("")
     self.fichierIn=""
     self.isFile = False
 
-  def meshFileNameChanged(self):
+  def meshFileNameChanged(self, zone):
+    """zone = L or R"""
     #FIXME Change in name Gen new med
-    self.fichierIn=str(self.LE_MeshFile_L.text())
+    if zone == 'L':
+        self.fichierIn=str(self.LE_MeshFile_L.text())
+    else:
+        self.fichierIn=str(self.LE_MeshFile_LR.text())
     if os.path.exists(self.fichierIn): 
       self.__selectedMesh=None
       self.MeshIn=""
-      self.LE_MeshSmesh_L.setText("")
+      if zone == 'L':
+          self.LE_MeshSmesh_L.setText("")
+      else:
+          self.LE_MeshSmesh_R.setText("")
       self.currentname = os.path.basename(self.fichierIn)
       return
     QMessageBox.warning(self, "Mesh file", "File doesn't exist")
 
-  def meshSmeshNameChanged(self):
-    """only change by GUI mouse selection, otherwise clear"""
+  def meshSmeshNameChanged(self, zone):
+    """only change by GUI mouse selection, otherwise clear // zone = L or R"""
     self.__selectedMesh = None
     self.MeshIn=""
-    self.LE_MeshSmesh_L.setText("")
+    if zone == 'L':
+        self.LE_MeshSmesh_L.setText("")
+    else:
+        self.LE_MeshSmesh_R.setText("")
     self.fichierIn=""
     return
 
