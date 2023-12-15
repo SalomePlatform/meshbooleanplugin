@@ -31,13 +31,26 @@ from qtsalome import *
 from MeshBooleanPlugin.compute_values import *
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
+import qwt
 
 verbose = True
 
-OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 3 }
+OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
         'Interactive And Robust Mesh Booleans' : 3, 'Cork' : 4, 'mcut' : 5}
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
+
+ENGINE_BENCHMARK_DICT = {\
+        'CGAL is  is a C++ library that aims to provide easy access to efficient and reliable algorithms in computational geometry. It is known to provide robust algorithms.' : 0,\
+        'igl is a C++ geometry processing library.' : 1,\
+        """VTK is a software for 3D visualization and can be used to perform Boolean operations.
+Our benchmark reveals that VTK is particularly slow, and this computational cost doesn't come with  a quality superior to the other engines.""" : 2,\
+        'Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements.' : 3, \
+        """Cork is designed to support Boolean operations between triangle meshes.
+Note that the development of this tool has stopped in 2013, and there are a lot of known issues.""" : 4,\
+        """mcut is a C++ code that performs Booleans on meshes 'at fine scale'. It actually works with libigl.
+It is widely used in the animation industry and in universities.
+This code is not robust and fails on most edge cases of out benchmark.""" : 5}
 
 NB_TRIANGLES = [972, 1940, 6958, 27320, 110324, 441496, 1765412]
 UNION_TIME_DATA = [[0.1458, 0.2223, 0.5972, 1.8644, 7.4354, 33.7484, 190.1539], # CGAL
@@ -123,6 +136,8 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
     self.COB_Operator.setCurrentIndex(1) # Needed to trigger the graph update
     self.COB_Operator.setCurrentIndex(0) # Needed to trigger the graph update
+    self.COB_Engine.setCurrentIndex(1) # Same for the benchmark label
+    self.COB_Engine.setCurrentIndex(0)
 
     self.resize(800, 600)
     #self.clean()
@@ -131,7 +146,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
   def connecterSignaux(self) :
     self.PB_Cancel.clicked.connect(self.PBCancelPressed)
-    self.PB_Default.clicked.connect(self.clean)
     self.PB_Help.clicked.connect(self.PBHelpPressed)
     self.PB_OK.clicked.connect(self.PBOKPressed)
 
@@ -196,20 +210,19 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
         smesh.RemoveMesh(self.__selectedMesh)
 
   def update_graph(self):
-    import qwt
     data = []
     if self.COB_Metric.currentIndex() == METRICS_DICT['Execution Time']:
-        data = DIFFERENCE_TIME_DATA
-        if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
-          data = UNION_TIME_DATA
-        elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
-          data = INTERSECTION_TIME_DATA
+      data = DIFFERENCE_TIME_DATA
+      if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
+        data = UNION_TIME_DATA
+      elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
+        data = INTERSECTION_TIME_DATA
     elif self.COB_Metric.currentIndex() == METRICS_DICT['Average Quality']:
-        data = DIFFERENCE_AVG_QUALITY_DATA
-        if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
-          data = UNION_AVG_QUALITY_DATA
-        elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
-          data = INTERSECTION_AVG_QUALITY_DATA
+      data = DIFFERENCE_AVG_QUALITY_DATA
+      if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
+        data = UNION_AVG_QUALITY_DATA
+      elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
+        data = INTERSECTION_AVG_QUALITY_DATA
 
     curve = qwt.QwtPlotCurve("Benchmark curve")
     curve.setData(NB_TRIANGLES, data[self.COB_Engine.currentIndex()],\
@@ -220,8 +233,8 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.QP_Benchmark.setAxisTitle(qwt.QwtPlot.xBottom, "Number of triangles")
     metric = ""
     for key, val in METRICS_DICT.items():
-        if val == self.COB_Metric.currentIndex():
-            metric = key
+      if val == self.COB_Metric.currentIndex():
+        metric = key
     self.QP_Benchmark.setAxisTitle(qwt.QwtPlot.yLeft, metric)
 
     self.QP_Benchmark.replot()
@@ -230,29 +243,20 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   def DisplayOperatorLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
-    if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
-      self.label_Operator.setText(_translate("MyPlugDialog", "Compute the union of the two meshes selected."))
-    elif self.COB_Operator.currentIndex() == OPERATOR_DICT['Intersection']:
-      self.label_Operator.setText(_translate("MyPlugDialog", "Compute the intersection of the two meshes selected."))
-    else:
-      self.label_Operator.setText(_translate("MyPlugDialog", "Compute the difference of the two meshes selected"))
+    for key, val in OPERATOR_DICT.items():
+      if self.COB_Operator.currentIndex() == val:
+        self.label_Operator.setText(_translate("MyPlugDialog", f"Compute the {key.lower()} of the two meshes selected."))
     self.update_graph()
 
   def DisplayEngineLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
-    if self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']:
-      self.label_Engine.setText(_translate("MyPlugDialog", "Compute with CGAL engine"))
-    elif self.COB_Engine.currentIndex() == ENGINE_DICT['igl']:
-      self.label_Engine.setText(_translate("MyPlugDialog", "Compute with igl engine"))
-    elif self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']:
-      self.label_Engine.setText(_translate("MyPlugDialog", "Compute with VTK engine"))
-    elif self.COB_Engine.currentIndex() == ENGINE_DICT['Interactive And Robust Mesh Booleans']:
-      self.label_Engine.setText(_translate("MyPlugDialog", "Compute with Interactive And Robust Mesh Booleans engine"))
-    elif self.COB_Engine.currentIndex() == ENGINE_DICT['Cork']:
-      self.label_Engine.setText(_translate("MyPlugDialog", "Compute with Cork engine"))
-    else:
-      self.label_Engine.setText(_translate("MyPlugDialog", "Compute with mcut engine"))
+    for key, val in ENGINE_DICT.items():
+      if self.COB_Engine.currentIndex() == val:
+        self.label_Engine.setText(_translate("MyPlugDialog", f"Compute with the {key} engine"))
+    for key, val in ENGINE_BENCHMARK_DICT.items():
+      if self.COB_Engine.currentIndex() == val:
+        self.label_Benchmark.setText(_translate("MyPlugDialog", key))
     self.update_graph()
 
   def PBHelpPressed(self):
