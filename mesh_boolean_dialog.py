@@ -25,6 +25,7 @@ import os, subprocess
 import tempfile
 import re
 import sys
+import meshio
 from MeshBooleanPlugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from MeshBooleanPlugin.myViewText import MyViewText
 from qtsalome import *
@@ -32,6 +33,7 @@ from MeshBooleanPlugin.compute_values import *
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 import qwt
+from VTK.exec_VTK import VTK_main
 
 verbose = True
 
@@ -104,16 +106,15 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
     self.setupUi(self)
     self.connecterSignaux()
-    self.fichierIn=""
-    self.fichierOut=""
-    self.MeshIn=""
     self.commande=""
     self.num=1
-    self.numRepair=1
-    self.__selectedMesh=None
-    self.values = None
-    self.isFile = False
-    self.currentName = ""
+    self.__selectedMesh_L=None
+    self.__selectedMesh_R=None
+    self.meshIn_L=""
+    self.isFile_L=False
+    self.meshIn_R=""
+    self.isFile_R=False
+    self.operator=""
 
     # complex with QResources: not used
     # The icon are supposed to be located in the $SMESH_ROOT_DIR/share/salome/resources/smesh folder,
@@ -140,7 +141,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.COB_Engine.setCurrentIndex(0)
 
     self.resize(800, 600)
-    #self.clean()
 
     self.maFenetre = None
 
@@ -149,12 +149,12 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.PB_Help.clicked.connect(self.PBHelpPressed)
     self.PB_OK.clicked.connect(self.PBOKPressed)
 
-    self.LE_MeshFile_L.returnPressed.connect(lambda _: self.meshFileNameChanged("L"))
-    self.LE_MeshSmesh_L.returnPressed.connect(lambda _: self.meshSmeshNameChanged("L"))
+    self.LE_MeshFile_L.returnPressed.connect(lambda : self.meshFileNameChanged("L"))
+    self.LE_MeshSmesh_L.returnPressed.connect(lambda : self.meshSmeshNameChanged("L"))
     self.PB_MeshFile_L.clicked.connect(lambda _: self.PBMeshFilePressed("L"))
     self.PB_MeshSmesh_L.clicked.connect(lambda _: self.PBMeshSmeshPressed("L"))
-    self.LE_MeshFile_R.returnPressed.connect(lambda _: self.meshFileNameChanged("R"))
-    self.LE_MeshSmesh_R.returnPressed.connect(lambda _: self.meshSmeshNameChanged("R"))
+    self.LE_MeshFile_R.returnPressed.connect(lambda : self.meshFileNameChanged("R"))
+    self.LE_MeshSmesh_R.returnPressed.connect(lambda : self.meshSmeshNameChanged("R"))
     self.PB_MeshFile_R.clicked.connect(lambda _: self.PBMeshFilePressed("R"))
     self.PB_MeshSmesh_R.clicked.connect(lambda _: self.PBMeshSmeshPressed("R"))
     #FIXME Do the same for _R
@@ -188,26 +188,41 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     TmpMesh.write(self.fichierIn, 'med')
     """
 
-  def GenMeshFromMed(self):
-    create_mesh = False
-    if self.__selectedMesh is None:
-      from salome.smesh import smeshBuilder
-      smesh = smeshBuilder.New()
-      self.__selectedMesh = smesh.CreateMeshesFromMED(self.fichierIn)[0][0]
-      create_mesh = True
-    self.fichierIn=tempfile.mktemp(suffix=".mesh",prefix="ForMMG_")
-    if os.path.exists(self.fichierIn):
-      os.remove(self.fichierIn)
-
-    if self.__selectedMesh is not None:
-      if str(type(self.__selectedMesh)) == "<class 'salome.smesh.smeshBuilder.Mesh'>":
-        self.__selectedMesh.ExportGMF(self.fichierIn)
-      else:
-        self.__selectedMesh.ExportGMF(self.__selectedMesh, self.fichierIn, True)
+  def GenObjFromMed(self, zone):
+    """zone = L or R"""
+    if zone == "L":
+      m = None
+      if self.__selectedMesh_L is not None: # Case left is mesh
+        self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+        if os.path.exists(self.meshIn_L):
+          os.remove(self.meshIn_L)
+        self.__selectedMesh_L.ExportSTL(self.meshIn_L, self.meshIn_L)
+        m = meshio.read(self.meshIn_L)
+        self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
+        m.write(self.meshIn_L)
+      else: # Case left is file
+        m = meshio.read(self.meshIn_L)
+        self.meshIn_L=tempfile.mktemp(suffix=".obj",prefix="ForBMC_")
+        if os.path.exists(self.meshIn_L):
+          os.remove(self.meshIn_L)
+        m.write(self.meshIn_L)
     else:
-      QMessageBox.critical(self, "Mesh", "internal error")
-    if create_mesh:
-        smesh.RemoveMesh(self.__selectedMesh)
+      if self.__selectedMesh_R is not None: # Case right is mesh
+        self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
+        self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+        if os.path.exists(self.meshIn_R):
+          os.remove(self.meshIn_R)
+        m = meshio.read(self.meshIn_R)
+        m.write(os.path.splitext(self.meshIn_R)[0] + ".obj")
+      else: # Case right is file
+        m = meshio.read(self.meshIn_R)
+        self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+        if os.path.exists(self.meshIn_R):
+          os.remove(self.meshIn_R)
+        m.write(self.meshIn_R)
+        m = meshio.read(self.meshIn_R) # Manip to avoid meshio from crashing if tetra cells
+        self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
+        m.write(self.meshIn_R)
 
   def update_graph(self):
     from PyQt5 import QtCore
@@ -238,15 +253,15 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       if val == self.COB_Metric.currentIndex():
         metric = key
     self.QP_Benchmark.setAxisTitle(qwt.QwtPlot.yLeft, metric)
-    operator = ''
+    self.operator = ''
     for key, val in OPERATOR_DICT.items():
       if val == self.COB_Operator.currentIndex():
-        operator = key
+        self.operator = key
     engine = ''
     for key, val in ENGINE_DICT.items():
       if val == self.COB_Engine.currentIndex():
         engine = key
-    self.label_Graph_Title.setText(_translate("MyPlugDialog", f"<-\nPerformences of {engine} on the {operator.lower()} operator, measuring the {metric.lower()}."))
+    self.label_Graph_Title.setText(_translate("MyPlugDialog", f"<-\nPerformences of {engine} on the {self.operator.lower()} operator, measuring the {metric.lower()}."))
 
     self.QP_Benchmark.replot()
 
@@ -292,112 +307,44 @@ default parameters by clicking on the 'Compute
 Default Values' button.
             """)
 
+  def prepareFichier(self, zone):
+    """zone = L or R"""
+    self.GenObjFromMed(zone)
+
   def PBOKPressed(self):
-    if self.fichierIn=="" and self.MeshIn=="":
-      QMessageBox.critical(self, "Mesh", "select an input mesh")
-      return False
-
-    ext = os.path.splitext(self.fichierIn)[-1]
-    if self.isFile and ext != '.med' \
-        and self.COB_Remesher.currentIndex() == REMESHER_DICT['MMGS']:
-      if not ((ext == 'mesh' or ext == '.meshb') and not (self.CB_RepairBeforeCompute.isChecked() or self.CB_RepairOnly.isChecked())):
-          self.GenMedFromAny(self.fichierIn)
-
-    CpyFichierIn = self.fichierIn
-    CpyMeshIn = self.MeshIn
-    CpySelectedMesh = self.__selectedMesh
-    if (self.CB_RepairBeforeCompute.isChecked() or self.CB_RepairOnly.isChecked()) and self.COB_Remesher.currentIndex() == REMESHER_DICT['MMGS']:
-      if self.values is None:
-        if self.fichierIn != "":
-          self.values = Values(self.fichierIn, 0, self.currentName)
-        else:
-          self.values = Values(self.MeshIn, 0, self.currentName)
-      self.Repair()
-      if not self.CB_GenRepair.isChecked() and not self.CB_RepairOnly.isChecked():
-        self.numRepair-=1
-    if not self.CB_RepairOnly.isChecked():
-      ext = os.path.splitext(self.fichierIn)[-1]
-      if self.fichierIn != "":
-        if ext == '.med':
-          self.GenMeshFromMed()
-        elif ext != '.mesh' and ext != '.meshb':
-          self.GenMedFromAny(self.fichierIn)
-          self.GenMeshFromMed()
-        self.__selectedMesh = None
-
-      if not(self.PrepareLigneCommande()):
-        #warning done yet
-        #QMessageBox.warning(self, "Compute", "Command not found")
-        return False
-
-      self.maFenetre=MyViewText(self,self.commande)
-      if (not self.CB_GenRepair.isChecked()) and self.values is not None:
-        self.values.DeleteMesh()
-
-    self.fichierIn = CpyFichierIn
-    self.MeshIn = CpyMeshIn
-    self.__selectedMesh = CpySelectedMesh
-    self.values = None
-    return True
-
-  def enregistreResultat(self):
     import salome
     import SMESH
     from salome.kernel import studyedit
     from salome.smesh import smeshBuilder
+    if self.meshIn_R=="" or self.meshIn_R=="":
+      QMessageBox.critical(self, "Mesh", "select an input mesh")
+      return False
+    if self.__selectedMesh_L is not None or not self.meshIn_L.endswith(".obj"): self.prepareFichier("L")
+    if self.__selectedMesh_R is not None or not self.meshIn_R.endswith(".obj"): self.prepareFichier("R")
+    if not (os.path.isfile(self.meshIn_L)):
+      QMessageBox.critical(self, "File", "unable to read GMF Mesh in "+str(self.meshIn_L))
+      return False
+    if not (os.path.isfile(self.meshIn_R)):
+      QMessageBox.critical(self, "File", "unable to read GMF Mesh in "+str(self.meshIn_R))
+      return False
+
+
+    print(self.meshIn_L, self.meshIn_R)
+
+    result_file =tempfile.mktemp(suffix=".med",prefix="ForBMC_")
+    if os.path.exists(result_file):
+      os.remove(result_file)
+    if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
+      VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+
     smesh = smeshBuilder.New()
-
-    if not os.path.isfile(self.fichierOut):
-      QMessageBox.warning(self, "Compute", "Result file "+self.fichierOut+" not found")
-
     maStudy=salome.myStudy
     smesh.UpdateStudy()
-    self.GenMedFromAny(self.fichierOut)
-    (outputMesh, status) = smesh.CreateMeshesFromMED(self.fichierIn)
+    (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
     outputMesh=outputMesh[0]
-    name=str(self.LE_MeshSmesh.text())
-    initialMeshFile=None
-    initialMeshObject=None
-    if name=="":
-      if self.MeshIn =="":
-        a = re.sub(r'_\d*$', '', str(self.fichierIn))
-      else: # Repaired
-        a = re.sub(r'_\d*$', '', str(self.MeshIn))
-      name=os.path.basename(os.path.splitext(a)[0])
-      initialMeshFile=a
-
-    else:
-      initialMeshObject=maStudy.FindObjectByName(name ,"SMESH")[0]
-
-    meshname = self.currentName+"_MMG_"+str(self.num)
-    smesh.SetName(outputMesh.GetMesh(), meshname)
+    name = self.operator + '_' + str(self.num)
+    smesh.SetName(outputMesh.GetMesh(), name)
     outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
-
-    self.editor = studyedit.getStudyEditor()
-    moduleEntry=self.editor.findOrCreateComponent("SMESH","SMESH")
-    HypReMeshEntry = self.editor.findOrCreateItem(
-        moduleEntry, name = "Plugins Hypotheses", icon="mesh_tree_hypo.png") #, comment = "HypoForRemeshing" )
-
-    monStudyBuilder=maStudy.NewBuilder()
-    monStudyBuilder.NewCommand()
-    newStudyIter=monStudyBuilder.NewObject(HypReMeshEntry)
-    self.editor.setAttributeValue(newStudyIter, "AttributeName", "MMG Parameters_"+str(self.num))
-    self.editor.setAttributeValue(newStudyIter, "AttributeComment", self.getResumeData(separator=" ; "))
-    
-    SOMesh=maStudy.FindObjectByName(meshname ,"SMESH")[0]
-    
-    if initialMeshFile!=None:
-      newStudyFileName=monStudyBuilder.NewObject(SOMesh)
-      self.editor.setAttributeValue(newStudyFileName, "AttributeName", "meshFile")
-      self.editor.setAttributeValue(newStudyFileName, "AttributeExternalFileDef", initialMeshFile)
-      self.editor.setAttributeValue(newStudyFileName, "AttributeComment", initialMeshFile)
-
-    if initialMeshObject!=None:
-      newLink=monStudyBuilder.NewObject(SOMesh)
-      monStudyBuilder.Addreference(newLink, initialMeshObject)
-
-    newLink=monStudyBuilder.NewObject(SOMesh)
-    monStudyBuilder.Addreference(newLink, newStudyIter)
 
     if salome.sg.hasDesktop(): salome.sg.updateObjBrowser()
     self.num+=1
@@ -423,24 +370,26 @@ Default Values' button.
     filter_string = "All mesh formats (*.unv *.cgns *.mesh *.meshb *.med *.stl)"
 
     if zone == 'L':
-        fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string + ";;All Files (*)")
+      fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string + ";;All Files (*)")
     else :
-        fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_R.text(), filter_string + ";;All Files (*)")
+      fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_R.text(), filter_string + ";;All Files (*)")
     if fd.exec_():
       infile = fd.selectedFiles()[0]
       if zone == 'L':
-          self.LE_MeshFile_L.setText(infile)
+        self.LE_MeshFile_L.setText(infile)
+        self.meshIn_L=str(infile)
+        self.isFile_L=True
       else:
-          self.LE_MeshFile_R.setText(infile)
-      self.fichierIn=str(infile)
-      self.currentName = os.path.splitext(os.path.basename(self.fichierIn))[0]
-      self.MeshIn=""
+        self.LE_MeshFile_R.setText(infile)
+        self.meshIn_R=str(infile)
+        self.isFile_R=True
+      #self.currentName = os.path.splitext(os.path.basename(self.fichierIn))[0]
       if zone == 'L':
-          self.LE_MeshSmesh_L.setText("")
+        self.LE_MeshSmesh_L.setText("")
+        self.__selectedMesh_L=None
       else:
-          self.LE_MeshSmesh_R.setText("")
-      self.__selectedMesh=None
-      self.isFile = True
+        self.LE_MeshSmesh_R.setText("")
+        self.__selectedMesh_R=None
 
   def PBMeshSmeshPressed(self, zone):
     """zone = L or R"""
@@ -458,178 +407,68 @@ Default Values' button.
       return
     self.smeshStudyTool = SMeshStudyTools()
     try:
-      self.__selectedMesh = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
+      if zone == "L":
+          self.__selectedMesh_L = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
+      else:
+          self.__selectedMesh_R = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
     except:
       QMessageBox.critical(self, "Mesh", "select an input mesh")
       return
-    if CORBA.is_nil(self.__selectedMesh):
-      QMessageBox.critical(self, "Mesh", "select an input mesh")
-      return
+    if zone == "L":
+      if CORBA.is_nil(self.__selectedMesh_L):
+        QMessageBox.critical(self, "Mesh", "select an input mesh")
+        return
+    else:
+      if CORBA.is_nil(self.__selectedMesh_L):
+        QMessageBox.critical(self, "Mesh", "select an input mesh")
+        return
     myName = mySObject.GetName()
 
-    self.MeshIn=myName
-    self.currentName = myName
     if zone == 'L':
-        self.LE_MeshSmesh_L.setText(myName)
-        self.LE_MeshFile_L.setText("")
+      #self.currentName = myName
+      self.meshIn_L=myName
+      self.LE_MeshSmesh_L.setText(myName)
+      self.LE_MeshFile_L.setText("")
+      self.isFile_L = False
     else:
-        self.LE_MeshSmesh_R.setText(myName)
-        self.LE_MeshFile_R.setText("")
-    self.fichierIn=""
-    self.isFile = False
+      #self.currentName = myName
+      self.meshIn_R=myName
+      self.LE_MeshSmesh_R.setText(myName)
+      self.LE_MeshFile_R.setText("")
+      self.isFile_R = False
 
   def meshFileNameChanged(self, zone):
     """zone = L or R"""
     #FIXME Change in name Gen new med
     if zone == 'L':
-        self.fichierIn=str(self.LE_MeshFile_L.text())
+      self.meshIn_L=str(self.LE_MeshFile_L.text())
+      self.isFile_L=False
+      if os.path.exists(self.meshIn_L): 
+        self.__selectedMesh_L=None
+        self.LE_MeshSmesh_L.setText("")
+        #self.currentname = os.path.basename(self.fichierIn)
+        return
     else:
-        self.fichierIn=str(self.LE_MeshFile_LR.text())
-    if os.path.exists(self.fichierIn): 
-      self.__selectedMesh=None
-      self.MeshIn=""
-      if zone == 'L':
-          self.LE_MeshSmesh_L.setText("")
-      else:
-          self.LE_MeshSmesh_R.setText("")
-      self.currentname = os.path.basename(self.fichierIn)
-      return
+      self.meshIn_R=str(self.LE_MeshFile_R.text())
+      self.isFile_R=False
+      if os.path.exists(self.meshIn_R): 
+        self.__selectedMesh_R=None
+        self.LE_MeshSmesh_R.setText("")
+        #self.currentname = os.path.basename(self.fichierIn)
+        return
     QMessageBox.warning(self, "Mesh file", "File doesn't exist")
 
   def meshSmeshNameChanged(self, zone):
     """only change by GUI mouse selection, otherwise clear // zone = L or R"""
-    self.__selectedMesh = None
-    self.MeshIn=""
     if zone == 'L':
-        self.LE_MeshSmesh_L.setText("")
+      self.__selectedMesh_L = None
+      self.LE_MeshSmesh_L.setText("")
+      self.meshIn_L = ""
     else:
-        self.LE_MeshSmesh_R.setText("")
-    self.fichierIn=""
+      self.__selectedMesh_R = None
+      self.LE_MeshSmesh_R.setText("")
+      self.meshIn_R = ""
     return
-
-  def prepareFichier(self):
-    self.GenMeshFromMed()
-
-  def PrepareLigneCommande(self):
-    if self.fichierIn=="" and self.MeshIn=="":
-      QMessageBox.critical(self, "Mesh", "select an input mesh")
-      return False
-    if self.__selectedMesh is not None: self.prepareFichier()
-    if not (os.path.isfile(self.fichierIn)):
-      QMessageBox.critical(self, "File", "unable to read GMF Mesh in "+str(self.fichierIn))
-      return False
-    
-    self.commande=""
-    selected_index = self.COB_Remesher.currentIndex()
-    if selected_index == REMESHER_DICT['MMGS']:
-      self.commande = "mmgs_O3"
-    elif selected_index == REMESHER_DICT['MMG2D']:
-      self.commande = "mmg2d_O3"
-    elif selected_index == REMESHER_DICT['MMG3D']:
-      self.commande = "mmg3d_O3"
-    else:
-      self.commande = "mmgs_O3"
-
-    deb=os.path.splitext(self.fichierIn)
-    self.fichierOut=deb[0] + "_output.mesh"
-    
-    for elt in self.sandboxes:
-      self.commande+=' ' + elt[0].text() + ' ' + elt[1].text()
-    
-    if not self.CB_InsertEdge.isChecked() : self.commande+=" -noinsert"
-    if not self.CB_SwapEdge.isChecked()  : self.commande+=" -noswap"
-    if not self.CB_MoveEdge.isChecked()  : self.commande+=" -nomove"
-    if self.SP_Geomapp.value() != 0.01 : self.commande+=" -hausd %f"%self.SP_Geomapp.value()
-    self.commande+=" -hmin %f"   %self.SP_Hmin.value()
-    self.commande+=" -hmax %f"   %self.SP_Hmax.value()
-    if self.SP_Gradation.value() != 1.3   : self.commande+=" -hgrad %f"  %self.SP_Gradation.value()
-
-    self.commande+=' -in "'  + self.fichierIn +'"'
-    self.commande+=' -out "' + self.fichierOut +'"'
-
-    if verbose: print("INFO: MMG command:\n  %s\n*WARNING* Copy-paste the command line in your study if you want to dump it." % self.commande)
-    return True
-
-  def clean(self):
-    if self.values is None and self.currentName != "" and self.COB_Remesher.currentIndex() == REMESHER_DICT['MMGS']:
-      if self.fichierIn != "":
-        cpy = self.fichierIn
-        self.GenMedFromAny(self.fichierIn)
-        self.values = Values(self.fichierIn, 0, self.currentName)
-        self.fichierIn = cpy
-      elif self.MeshIn != "":
-        self.values = Values(self.MeshIn, 0, self.currentName)
-
-    if self.values is not None:
-      self.values.ComputeNewDefaultValues()
-      self.SP_Geomapp.setProperty("value", self.values.geomapp)
-      self.SP_Gradation.setProperty("value", self.values.hgrad)
-      self.SP_Hmin.setProperty("value", self.values.hmin)
-      self.SP_Hmax.setProperty("value", self.values.hmax)
-      self.values.DeleteMesh()
-
-    else: # No file provided, default from MMG
-      self.SP_Geomapp.setProperty("value", 0.01)
-      self.SP_Gradation.setProperty("value", 1.3)
-      self.SP_Hmin.setProperty("value", 0.01)
-      self.SP_Hmax.setProperty("value", 10)
-    self.values = None
-    self.CB_InsertEdge.setChecked(True)
-    self.CB_MoveEdge.setChecked(True)
-    self.CB_SwapEdge.setChecked(True)
-    self.CB_RepairBeforeCompute.setChecked(True)
-    self.CB_RepairOnly.setChecked(False)
-    self.CB_GenRepair.setChecked(False)
-    #self.COB_Remesher.setCurrentIndex(REMESHER_DICT['MMGS'])
-
-    from PyQt5 import QtCore, QtGui, QtWidgets
-    _translate = QtCore.QCoreApplication.translate
-    for i in reversed(range(self.gridLayout_5.count())):
-      widget = self.gridLayout_5.takeAt(i).widget()
-      if widget is not None:
-        widget.setParent(None)
-
-    self.LE_SandboxR_1 = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-    self.LE_SandboxR_1.setMinimumSize(QtCore.QSize(0, 30))
-    self.LE_SandboxR_1.setObjectName("LE_SandboxR_1")
-    self.gridLayout_5.addWidget(self.LE_SandboxR_1, 1, 1, 1, 1)
-
-    self.LE_SandboxL_1 = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-    self.LE_SandboxL_1.setMinimumSize(QtCore.QSize(0, 30))
-    self.LE_SandboxL_1.setObjectName("LE_SandboxL_1")
-    self.gridLayout_5.addWidget(self.LE_SandboxL_1, 1, 0, 1, 1)
-
-    self.label_3 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-    self.label_3.setObjectName("label_3")
-    self.gridLayout_5.addWidget(self.label_3, 0, 1, 1, 1)
-
-    self.label_2 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-    self.label_2.setObjectName("label_2")
-    self.gridLayout_5.addWidget(self.label_2, 0, 0, 1, 1)
-
-    spacerItem16 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-    self.gridLayout_5.addItem(spacerItem16, 2, 0, 1, 1)
-
-    spacerItem17 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-    self.gridLayout_5.addItem(spacerItem17, 2, 1, 1, 1)
-
-    self.gridLayout_5.setRowStretch(0,0)
-    self.gridLayout_5.setRowStretch(1,0)
-    self.gridLayout_5.setRowStretch(2,0)
-
-    self.label_3.setText(_translate("MyPlugDialog", "Value"))
-    self.label_2.setText(_translate("MyPlugDialog", "Parameter"))
-
-    self.LE_SandboxL_1.setText("")
-    self.LE_SandboxR_1.setText("")
-    self.sandboxes = [(self.LE_SandboxL_1, self.LE_SandboxR_1)]
-
-    #self.PBMeshSmeshPressed() #do not that! problem if done in load surfopt hypo from object browser
-    self.TWOptions.setCurrentIndex(0) # Reset current active tab to the first tab
-    value = self.SP_Hmin.value()
-    self.UpdateHminDecimals(value)
-    value = self.SP_Hmax.value()
-    self.UpdateHmaxDecimals(value)
 
 __dialog=None
 def getDialog():
@@ -640,6 +479,4 @@ def getDialog():
   global __dialog
   if __dialog is None:
     __dialog = MeshBooleanDialog()
-  #else :
-  #  __dialog.clean()
   return __dialog

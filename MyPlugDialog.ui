@@ -613,7 +613,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,4">
       <property name="spacing">
-       <number>0</number>
+       <number>3</number>
       </property>
       <property name="leftMargin">
        <number>3</number>
