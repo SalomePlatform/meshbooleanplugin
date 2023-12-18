@@ -27,15 +27,11 @@ import re
 import sys
 import meshio
 from MeshBooleanPlugin.MyPlugDialog_ui import Ui_MyPlugDialog
-from MeshBooleanPlugin.myViewText import MyViewText
 from qtsalome import *
-from MeshBooleanPlugin.compute_values import *
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 import qwt
 from VTK.exec_VTK import VTK_main
-
-verbose = True
+from InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
@@ -107,7 +103,9 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.setupUi(self)
     self.connecterSignaux()
     self.commande=""
-    self.num=1
+    self.union_num=1
+    self.intersection_num=1
+    self.difference_num=1
     self.__selectedMesh_L=None
     self.__selectedMesh_R=None
     self.meshIn_L=""
@@ -162,31 +160,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.COB_Operator.currentIndexChanged.connect(self.DisplayOperatorLabel)
     self.COB_Engine.currentIndexChanged.connect(self.DisplayEngineLabel)
     self.COB_Metric.currentIndexChanged.connect(self.update_graph)
-
-  def GenMedFromAny(self, fileIn):
-    if fileIn.endswith('.med'):
-      return
-    from salome.smesh import smeshBuilder
-    smesh = smeshBuilder.New()
-    self.fichierIn=tempfile.mktemp(suffix=".med",prefix="ForMMG_")
-    if os.path.exists(self.fichierIn):
-      os.remove(self.fichierIn)
-
-    ext = os.path.splitext(fileIn)[-1]
-    if ext == '.mesh' or ext == '.meshb':
-      TmpMesh = smesh.CreateMeshesFromGMF(fileIn)[0]
-    elif ext == '.cgns':
-      TmpMesh = smesh.CreateMeshesFromCGNS(fileIn)[0][0]
-    elif ext == '.stl':
-      TmpMesh = smesh.CreateMeshesFromSTL(fileIn)
-    elif ext == '.unv':
-      TmpMesh = smesh.CreateMeshesFromUNV(fileIn)
-    TmpMesh.ExportMED(self.fichierIn, autoDimension=True)
-    smesh.RemoveMesh(TmpMesh)
-    """
-    TmpMesh = meshio.read(fileIn)
-    TmpMesh.write(self.fichierIn, 'med')
-    """
 
   def GenObjFromMed(self, zone):
     """zone = L or R"""
@@ -265,7 +238,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
     self.QP_Benchmark.replot()
 
-
   def DisplayOperatorLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
@@ -328,26 +300,34 @@ Default Values' button.
       QMessageBox.critical(self, "File", "unable to read GMF Mesh in "+str(self.meshIn_R))
       return False
 
-
-    print(self.meshIn_L, self.meshIn_R)
-
     result_file =tempfile.mktemp(suffix=".med",prefix="ForBMC_")
     if os.path.exists(result_file):
       os.remove(result_file)
     if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
       VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['Interactive And Robust Mesh Booleans']):
+      IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
 
     smesh = smeshBuilder.New()
     maStudy=salome.myStudy
     smesh.UpdateStudy()
     (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
     outputMesh=outputMesh[0]
-    name = self.operator + '_' + str(self.num)
+    name = ""
+    if self.operator.lower() == 'union':
+        name = self.operator + '_' + str(self.union_num)
+        self.union_num+=1
+    elif self.operator.lower() == 'intersection':
+        name = self.operator + '_' + str(self.intersection_num)
+        self.intersection_num+=1
+    else:
+        name = self.operator + '_' + str(self.difference_num)
+        self.difference_num+=1
     smesh.SetName(outputMesh.GetMesh(), name)
     outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
 
     if salome.sg.hasDesktop(): salome.sg.updateObjBrowser()
-    self.num+=1
+    computing_box = QMessageBox.about(None, "Compute","Computation successfuly finished")
     return True
 
   def getResumeData(self, separator="\n"):
@@ -367,12 +347,12 @@ Default Values' button.
 
   def PBMeshFilePressed(self, zone):
     """zone = L or R"""
-    filter_string = "All mesh formats (*.unv *.cgns *.mesh *.meshb *.med *.stl)"
+    filter_string = "All mesh formats (*.obj *.off *.unv *.cgns *.mesh *.meshb *.med *.stl);;All Files (*)"
 
     if zone == 'L':
-      fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string + ";;All Files (*)")
+      fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string)
     else :
-      fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_R.text(), filter_string + ";;All Files (*)")
+      fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_R.text(), filter_string)
     if fd.exec_():
       infile = fd.selectedFiles()[0]
       if zone == 'L':

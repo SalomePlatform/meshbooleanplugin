@@ -102,6 +102,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
 
   with open(new_out_name, 'w') as output_file:
     output_file.write(modified_content)
+
   # The following is a method to use meshio without SALOME crashing
   command = ['python3', '-c', f'import meshio; m = meshio.read("{new_out_name}"); m.write("{out_name}")']
   with open(os.devnull, 'w') as null_file:
