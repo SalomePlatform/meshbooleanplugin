@@ -30,12 +30,12 @@ from MeshBooleanPlugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from qtsalome import *
 from PyQt5.QtCore import Qt
 import qwt
-from VTK.exec_VTK import VTK_main
-from InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
-from cork.exec_cork import cork_main
-from mcut.exec_mcut import mcut_main
-from libigl.exec_libigl import libigl_main
-from cgal.exec_cgal import cgal_main
+from MeshBooleanPlugin.VTK.exec_VTK import VTK_main
+from MeshBooleanPlugin.InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
+from MeshBooleanPlugin.cork.exec_cork import cork_main
+from MeshBooleanPlugin.mcut.exec_mcut import mcut_main
+from MeshBooleanPlugin.libigl.exec_libigl import libigl_main
+from MeshBooleanPlugin.cgal.exec_cgal import cgal_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
@@ -164,42 +164,69 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.COB_Engine.currentIndexChanged.connect(self.DisplayEngineLabel)
     self.COB_Metric.currentIndexChanged.connect(self.update_graph)
 
+  def error_popup(self, title, e):
+    QMessageBox.critical(self, title, str(e))
+    return False
+
   def GenObjFromMed(self, zone):
     """zone = L or R"""
     if zone == "L":
       m = None
       if self.__selectedMesh_L is not None: # Case left is mesh
-        self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-        if os.path.exists(self.meshIn_L):
-          os.remove(self.meshIn_L)
-        self.__selectedMesh_L.ExportSTL(self.meshIn_L, self.meshIn_L)
-        m = meshio.read(self.meshIn_L)
-        self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
-        m.write(self.meshIn_L)
+        try:
+          self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          if os.path.exists(self.meshIn_L):
+            os.remove(self.meshIn_L)
+        except Exception as e:
+          return self.error_popup("Temporary file creation", e)
+
+        try:
+          self.__selectedMesh_L.ExportSTL(self.meshIn_L, self.meshIn_L)
+          m = meshio.read(self.meshIn_L)
+          self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
+          m.write(self.meshIn_L)
+        except Exception as e:
+          return self.error_popup("Mesh export", e)
       else: # Case left is file
-        m = meshio.read(self.meshIn_L)
-        self.meshIn_L=tempfile.mktemp(suffix=".obj",prefix="ForBMC_")
-        if os.path.exists(self.meshIn_L):
-          os.remove(self.meshIn_L)
-        m.write(self.meshIn_L)
+        try:
+          m = meshio.read(self.meshIn_L)
+          self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          if os.path.exists(self.meshIn_L):
+            os.remove(self.meshIn_L)
+          m.write(self.meshIn_L)
+          m = meshio.read(self.meshIn_L) # Manip to avoid meshio from crashing if tetra cells
+          self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
+          m.write(self.meshIn_L)
+        except Exception as e:
+          return self.error_popup("File handling", e)
     else:
       if self.__selectedMesh_R is not None: # Case right is mesh
-        self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-        if os.path.exists(self.meshIn_R):
-          os.remove(self.meshIn_R)
-        self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
-        m = meshio.read(self.meshIn_R)
-        self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
-        m.write(self.meshIn_R)
+        try:
+          self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          if os.path.exists(self.meshIn_R):
+            os.remove(self.meshIn_R)
+        except Exception as e:
+          return self.error_popup("Temporary file creation", e)
+
+        try:
+          self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
+          m = meshio.read(self.meshIn_R)
+          self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
+          m.write(self.meshIn_R)
+        except Exception as e:
+          return self.error_popup("Mesh export", e)
       else: # Case right is file
-        m = meshio.read(self.meshIn_R)
-        self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-        if os.path.exists(self.meshIn_R):
-          os.remove(self.meshIn_R)
-        m.write(self.meshIn_R)
-        m = meshio.read(self.meshIn_R) # Manip to avoid meshio from crashing if tetra cells
-        self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
-        m.write(self.meshIn_R)
+        try:
+          m = meshio.read(self.meshIn_R)
+          self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          if os.path.exists(self.meshIn_R):
+            os.remove(self.meshIn_R)
+          m.write(self.meshIn_R)
+          m = meshio.read(self.meshIn_R) # Manip to avoid meshio from crashing if tetra cells
+          self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
+          m.write(self.meshIn_R)
+        except Exception as e:
+          return self.error_popup("File handling", e)
 
   def update_graph(self):
     from PyQt5 import QtCore
@@ -286,6 +313,7 @@ Default Values' button.
   def prepareFichier(self, zone):
     """zone = L or R"""
     self.GenObjFromMed(zone)
+  
 
   def PBOKPressed(self):
     import salome
@@ -293,38 +321,46 @@ Default Values' button.
     from salome.kernel import studyedit
     from salome.smesh import smeshBuilder
     if self.meshIn_R=="" or self.meshIn_R=="":
-      QMessageBox.critical(self, "Mesh", "select an input mesh")
-      return False
+      return self.error_popup("Mesh", "select an input mesh")
     if self.__selectedMesh_L is not None or not self.meshIn_L.endswith(".obj"): self.prepareFichier("L")
     if self.__selectedMesh_R is not None or not self.meshIn_R.endswith(".obj"): self.prepareFichier("R")
     if not (os.path.isfile(self.meshIn_L)):
-      QMessageBox.critical(self, "File", "unable to read GMF Mesh in "+str(self.meshIn_L))
-      return False
+      return self.error_popup("File", "unable to read GMF Mesh in "+str(self.meshIn_L))
     if not (os.path.isfile(self.meshIn_R)):
-      QMessageBox.critical(self, "File", "unable to read GMF Mesh in "+str(self.meshIn_R))
-      return False
+      return self.error_popup("File", "unable to read GMF Mesh in "+str(self.meshIn_R))
 
-    result_file =tempfile.mktemp(suffix=".med",prefix="ForBMC_")
-    if os.path.exists(result_file):
-      os.remove(result_file)
+    try:
+      result_file =tempfile.mktemp(suffix=".med",prefix="ForBMC_")
+      if os.path.exists(result_file):
+        os.remove(result_file)
+    except Exception as e:
+        return self.error_popup("Creation of the temporary result file", e)
 
-    if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
-      VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['Interactive And Robust Mesh Booleans']):
-      IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['cork']):
-      cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['mcut']):
-      mcut_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['igl']):
-      libigl_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']):
-      cgal_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    try:
+      if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
+        VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['Interactive And Robust Mesh Booleans']):
+        IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['cork']):
+        cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['mcut']):
+        mcut_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['igl']):
+        libigl_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']):
+        cgal_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    except Exception as e:
+        return self.error_popup("Error while performing the boolean", e)
 
     smesh = smeshBuilder.New()
     maStudy=salome.myStudy
     smesh.UpdateStudy()
-    (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
+    try:
+      (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
+    except Exception as e:
+      return self.error_popup("Result import", e)
+    if len(outputMesh) == 0:
+      return self.error_popup("Not found", "MED result file not found.")
     outputMesh=outputMesh[0]
     name = ""
     if self.operator.lower() == 'union':

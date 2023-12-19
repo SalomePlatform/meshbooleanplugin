@@ -51,7 +51,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
   # Read the input meshes
   poly1 = ReadPolyData(fn1)
   if poly1 is None:
-    return -1
+    raise IOError(f"Failed to read file: {fn1}")
   tri1 = vtkTriangleFilter()
   tri1.SetInputData(poly1)
   clean1 = vtkCleanPolyData()
@@ -61,7 +61,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
 
   poly2 = ReadPolyData(fn2)
   if poly2 is None:
-    return -1
+    raise IOError(f"Failed to read file: {fn2}")
   tri2 = vtkTriangleFilter()
   tri2.SetInputData(poly2)
   tri2.Update()
@@ -79,8 +79,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
   elif operation.lower() == 'difference':
     booleanFilter.SetOperationToDifference()
   else:
-    print('Unknown operation:', operation)
-    return -1
+      raise NameError(f"Failed to parse boolean operation {str(operation.lower())}")
 
   booleanFilter.SetInputData(0, input1)
   booleanFilter.SetInputData(1, input2)
@@ -88,9 +87,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
     booleanFilter.Update()
     result_mesh = booleanFilter.GetOutput()
   except:
-    with open('logs.txt', 'a') as file:
-      file.write('ko\n')
-    return -1
+    raise RuntimeError
 
   new_out_name = out_name[:-3] + "stl"
   WriteSTLMesh(result_mesh, new_out_name)
@@ -109,7 +106,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
     try:
       subprocess.check_call(command, stdout=null_file, stderr=null_file)
     except Exception as e:
-      return -1
+      raise
   return end_time - start_time
 
 def VTK_main(operation, fn1, fn2, fnout):
