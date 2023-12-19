@@ -32,10 +32,12 @@ from PyQt5.QtCore import Qt
 import qwt
 from VTK.exec_VTK import VTK_main
 from InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
+from cork.exec_cork import cork_main
+from mcut.exec_mcut import mcut_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
-        'Interactive And Robust Mesh Booleans' : 3, 'Cork' : 4, 'mcut' : 5}
+        'Interactive And Robust Mesh Booleans' : 3, 'cork' : 4, 'mcut' : 5}
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
 
 ENGINE_BENCHMARK_DICT = {\
@@ -155,7 +157,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.LE_MeshSmesh_R.returnPressed.connect(lambda : self.meshSmeshNameChanged("R"))
     self.PB_MeshFile_R.clicked.connect(lambda _: self.PBMeshFilePressed("R"))
     self.PB_MeshSmesh_R.clicked.connect(lambda _: self.PBMeshSmeshPressed("R"))
-    #FIXME Do the same for _R
 
     self.COB_Operator.currentIndexChanged.connect(self.DisplayOperatorLabel)
     self.COB_Engine.currentIndexChanged.connect(self.DisplayEngineLabel)
@@ -181,12 +182,13 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
         m.write(self.meshIn_L)
     else:
       if self.__selectedMesh_R is not None: # Case right is mesh
-        self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
         self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
         if os.path.exists(self.meshIn_R):
           os.remove(self.meshIn_R)
+        self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
         m = meshio.read(self.meshIn_R)
-        m.write(os.path.splitext(self.meshIn_R)[0] + ".obj")
+        self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
+        m.write(self.meshIn_R)
       else: # Case right is file
         m = meshio.read(self.meshIn_R)
         self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
@@ -303,10 +305,15 @@ Default Values' button.
     result_file =tempfile.mktemp(suffix=".med",prefix="ForBMC_")
     if os.path.exists(result_file):
       os.remove(result_file)
+
     if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
       VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
     elif (self.COB_Engine.currentIndex() == ENGINE_DICT['Interactive And Robust Mesh Booleans']):
       IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['cork']):
+      cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['mcut']):
+      mcut_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
 
     smesh = smeshBuilder.New()
     maStudy=salome.myStudy
@@ -315,14 +322,14 @@ Default Values' button.
     outputMesh=outputMesh[0]
     name = ""
     if self.operator.lower() == 'union':
-        name = self.operator + '_' + str(self.union_num)
-        self.union_num+=1
+      name = self.operator + '_' + str(self.union_num)
+      self.union_num+=1
     elif self.operator.lower() == 'intersection':
-        name = self.operator + '_' + str(self.intersection_num)
-        self.intersection_num+=1
+      name = self.operator + '_' + str(self.intersection_num)
+      self.intersection_num+=1
     else:
-        name = self.operator + '_' + str(self.difference_num)
-        self.difference_num+=1
+      name = self.operator + '_' + str(self.difference_num)
+      self.difference_num+=1
     smesh.SetName(outputMesh.GetMesh(), name)
     outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
 
