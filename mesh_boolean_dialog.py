@@ -34,6 +34,8 @@ from VTK.exec_VTK import VTK_main
 from InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
 from cork.exec_cork import cork_main
 from mcut.exec_mcut import mcut_main
+from libigl.exec_libigl import libigl_main
+from cgal.exec_cgal import cgal_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
@@ -314,6 +316,10 @@ Default Values' button.
       cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
     elif (self.COB_Engine.currentIndex() == ENGINE_DICT['mcut']):
       mcut_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['igl']):
+      libigl_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+    elif (self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']):
+      cgal_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
 
     smesh = smeshBuilder.New()
     maStudy=salome.myStudy
