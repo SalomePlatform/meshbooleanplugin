@@ -90,15 +90,18 @@ def boolean_operation(operation, fn1, fn2, out_name):
     raise RuntimeError
 
   new_out_name = out_name[:-3] + "stl"
-  WriteSTLMesh(result_mesh, new_out_name)
+  try:
+    WriteSTLMesh(result_mesh, new_out_name)
+  except:
+      raise IOError("Could not write the result in the STL file")
   end_time = time.time()
-  with open(new_out_name, 'r') as input_file:
-    content = input_file.read()
-
-  modified_content = content.replace(',', '.')
-
-  with open(new_out_name, 'w') as output_file:
-    output_file.write(modified_content)
+  with open(new_out_name, 'r+') as file:
+    content = file.read()
+    modified_content = content.replace(',', '.')
+    file.seek(0)
+    file.truncate()
+    file.write(modified_content)
+    file.seek(0, 2)
 
   # The following is a method to use meshio without SALOME crashing
   command = ['python3', '-c', f'import meshio; m = meshio.read("{new_out_name}"); m.write("{out_name}")']

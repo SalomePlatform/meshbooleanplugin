@@ -102,6 +102,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   """
   """
   def __init__(self):
+    from PyQt5 import QtCore
     QWidget.__init__(self)
     self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
     self.setupUi(self)
@@ -117,6 +118,8 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.meshIn_R=""
     self.isFile_R=False
     self.operator=""
+    _translate = QtCore.QCoreApplication.translate
+    self.label_summup.setText(_translate("MyPlugDialog", ""))
 
     # complex with QResources: not used
     # The icon are supposed to be located in the $SMESH_ROOT_DIR/share/salome/resources/smesh folder,
@@ -163,6 +166,37 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.COB_Operator.currentIndexChanged.connect(self.DisplayOperatorLabel)
     self.COB_Engine.currentIndexChanged.connect(self.DisplayEngineLabel)
     self.COB_Metric.currentIndexChanged.connect(self.update_graph)
+
+  def DisplaySummupLabel(self):
+    from PyQt5 import QtCore
+    _translate = QtCore.QCoreApplication.translate
+    if self.meshIn_L == "" or self.meshIn_R == "":
+      self.label_summup.setText(_translate("MyPlugDialog", ""))
+      return
+    symbol = ''
+    if self.operator.lower() == 'union':
+      symbol = '\u222A'
+    elif self.operator.lower() == 'intersection':
+      symbol = '\u2229'
+    else:
+      symbol = '\u2216'
+
+    left_name = self.LE_MeshSmesh_L
+    if self.isFile_L:
+      left_name = os.path.splitext(os.path.basename(self.LE_MeshFile_L.text()))[0]
+    right_name = self.LE_MeshSmesh_R
+    if self.isFile_R:
+      right_name = os.path.splitext(os.path.basename(self.LE_MeshFile_R.text()))[0]
+
+    engine = ""
+    for key, val in ENGINE_DICT.items():
+      if val == self.COB_Engine.currentIndex():
+        engine = key
+
+    if engine == "Interactive And Robust Mesh Booleans":
+      engine = "IRMB" # prettier display
+
+    self.label_summup.setText(_translate("MyPlugDialog", f"({engine}) : {left_name} {symbol} {right_name}"))
 
   def error_popup(self, title, e):
     QMessageBox.critical(self, title, str(e))
@@ -268,6 +302,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.label_Graph_Title.setText(_translate("MyPlugDialog", f"<-\nPerformences of {engine} on the {self.operator.lower()} operator, measuring the {metric.lower()}."))
 
     self.QP_Benchmark.replot()
+    self.DisplaySummupLabel()
 
   def DisplayOperatorLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
@@ -289,25 +324,18 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.update_graph()
 
   def PBHelpPressed(self):
-    QMessageBox.about(None, "About this MMG remeshing tool",
+    QMessageBox.about(None, "About this boolean mesh cutting tool",
             """
-                    Adapt your mesh with MMG
-                    -------------------------------------------
+This tool allows you to apply boolean
+operators to your meshes. You can fill
+the 'Left mesh' and the 'Right mesh' fields,
+choose an operator and an engine and
+compute the result.
 
-This tool allows your to adapt your mesh after a
-Boolean operation. It also allows you to repair a
-bad mesh (double elements or free elements).
-
-By default, your mesh will be prepared for MMG.
-You can find the options to disable it or
-explicitely generate the repaired mesh in the
-'Advanced Remeshing Options' panel.
-By pressing the 'Remesh' button, your mesh will
-be adapted by MMG with your selected parameters.
-You can change the parameters to better fit you
-needs than with the default ones. Restore the
-default parameters by clicking on the 'Compute
-Default Values' button.
+For each engine, you can access a piece of
+information about its performances with the
+selected operator, measuring the metric
+that you selected.
             """)
 
   def prepareFichier(self, zone):
@@ -420,6 +448,8 @@ Default Values' button.
         self.LE_MeshSmesh_R.setText("")
         self.__selectedMesh_R=None
 
+    self.DisplaySummupLabel()
+
   def PBMeshSmeshPressed(self, zone):
     """zone = L or R"""
     from omniORB import CORBA
@@ -466,6 +496,8 @@ Default Values' button.
       self.LE_MeshFile_R.setText("")
       self.isFile_R = False
 
+    self.DisplaySummupLabel()
+
   def meshFileNameChanged(self, zone):
     """zone = L or R"""
     #FIXME Change in name Gen new med
@@ -476,6 +508,7 @@ Default Values' button.
         self.__selectedMesh_L=None
         self.LE_MeshSmesh_L.setText("")
         #self.currentname = os.path.basename(self.fichierIn)
+        self.DisplaySummupLabel()
         return
     else:
       self.meshIn_R=str(self.LE_MeshFile_R.text())
@@ -484,8 +517,10 @@ Default Values' button.
         self.__selectedMesh_R=None
         self.LE_MeshSmesh_R.setText("")
         #self.currentname = os.path.basename(self.fichierIn)
+        self.DisplaySummupLabel()
         return
     QMessageBox.warning(self, "Mesh file", "File doesn't exist")
+
 
   def meshSmeshNameChanged(self, zone):
     """only change by GUI mouse selection, otherwise clear // zone = L or R"""
@@ -497,6 +532,7 @@ Default Values' button.
       self.__selectedMesh_R = None
       self.LE_MeshSmesh_R.setText("")
       self.meshIn_R = ""
+    self.DisplaySummupLabel()
     return
 
 __dialog=None
