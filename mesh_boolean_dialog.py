@@ -25,7 +25,6 @@ import os, subprocess
 import tempfile
 import re
 import sys
-import meshio
 from MeshBooleanPlugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from qtsalome import *
 from PyQt5.QtCore import Qt
@@ -216,21 +215,39 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
         try:
           self.__selectedMesh_L.ExportSTL(self.meshIn_L, self.meshIn_L)
-          m = meshio.read(self.meshIn_L)
+
+          # The following is a method to use meshio without SALOME crashing
+          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_L}"); m.write("{os.path.splitext(self.meshIn_L)[0] + ".obj"}")']
+          with open(os.devnull, 'w') as null_file:
+            try:
+              subprocess.check_call(command, stdout=null_file, stderr=null_file)
+            except Exception as e:
+              raise
+          # m = meshio.read(self.meshIn_L)
           self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
-          m.write(self.meshIn_L)
+          # m.write(self.meshIn_L)
         except Exception as e:
           return self.error_popup("Mesh export", e)
       else: # Case left is file
         try:
-          m = meshio.read(self.meshIn_L)
-          self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          if os.path.exists(self.meshIn_L):
-            os.remove(self.meshIn_L)
-          m.write(self.meshIn_L)
-          m = meshio.read(self.meshIn_L) # Manip to avoid meshio from crashing if tetra cells
-          self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
-          m.write(self.meshIn_L)
+          tempname=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          if os.path.exists(tempname):
+            os.remove(tempname)
+          # The following is a method to use meshio without SALOME crashing
+          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_L}"); m.write("{tempname}"); m = meshio.read("{tempname}"); m.write("{os.path.splitext(tempname)[0] + ".obj"}")']
+          with open(os.devnull, 'w') as null_file:
+            try:
+              subprocess.check_call(command, stdout=null_file, stderr=null_file)
+            except Exception as e:
+              raise
+          #m = meshio.read(self.meshIn_L)
+          #self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          #if os.path.exists(self.meshIn_L):
+          #  os.remove(self.meshIn_L)
+          #m.write(self.meshIn_L)
+          #m = meshio.read(self.meshIn_L) # Manip to avoid meshio from crashing if tetra cells
+          self.meshIn_L = os.path.splitext(tempname)[0] + ".obj"
+          #m.write(self.meshIn_L)
         except Exception as e:
           return self.error_popup("File handling", e)
     else:
@@ -244,21 +261,36 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
         try:
           self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
-          m = meshio.read(self.meshIn_R)
+          # The following is a method to use meshio without SALOME crashing
+          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_R}"); m.write("{os.path.splitext(self.meshIn_R)[0] + ".obj"}")']
+          with open(os.devnull, 'w') as null_file:
+            try:
+              subprocess.check_call(command, stdout=null_file, stderr=null_file)
+            except Exception as e:
+              raise
+          #m = meshio.read(self.meshIn_R)
           self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
-          m.write(self.meshIn_R)
+          #m.write(self.meshIn_R)
         except Exception as e:
           return self.error_popup("Mesh export", e)
       else: # Case right is file
         try:
-          m = meshio.read(self.meshIn_R)
-          self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          if os.path.exists(self.meshIn_R):
-            os.remove(self.meshIn_R)
-          m.write(self.meshIn_R)
-          m = meshio.read(self.meshIn_R) # Manip to avoid meshio from crashing if tetra cells
-          self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
-          m.write(self.meshIn_R)
+          tempname=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          if os.path.exists(tempname):
+            os.remove(tempname)
+          # The following is a method to use meshio without SALOME crashing
+          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_R}"); m.write("{tempname}"); m = meshio.read("{tempname}"); m.write("{os.path.splitext(tempname)[0] + ".obj"}")']
+          with open(os.devnull, 'w') as null_file:
+            try:
+              subprocess.check_call(command, stdout=null_file, stderr=null_file)
+            except Exception as e:
+              raise
+          #m = meshio.read(self.meshIn_R)
+          #self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
+          #m.write(self.meshIn_R)
+          #m = meshio.read(self.meshIn_R) # Manip to avoid meshio from crashing if tetra cells
+          self.meshIn_R = os.path.splitext(tempname)[0] + ".obj"
+          #m.write(self.meshIn_R)
         except Exception as e:
           return self.error_popup("File handling", e)
 
@@ -424,7 +456,7 @@ that you selected.
 
   def PBMeshFilePressed(self, zone):
     """zone = L or R"""
-    filter_string = "All mesh formats (*.obj *.off *.unv *.cgns *.mesh *.meshb *.med *.stl);;All Files (*)"
+    filter_string = "All mesh formats supported (*.obj *.off *.mesh *.med *.stl);;All Files (*)"
 
     if zone == 'L':
       fd = QFileDialog(self, "select an existing mesh file", self.LE_MeshFile_L.text(), filter_string)
