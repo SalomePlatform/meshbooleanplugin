@@ -497,20 +497,22 @@ that you selected.
       QMessageBox.critical(self, "Mesh", "select an input mesh")
       return
     self.smeshStudyTool = SMeshStudyTools()
-    try:
-      if zone == "L":
-          self.__selectedMesh_L = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
-      else:
-          self.__selectedMesh_R = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
-    except:
-      QMessageBox.critical(self, "Mesh", "select an input mesh")
-      return
     if zone == "L":
+      try:
+        self.__selectedMesh_L = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
+      except:
+        QMessageBox.critical(self, "Mesh", "select an input mesh")
+        return
       if CORBA.is_nil(self.__selectedMesh_L):
         QMessageBox.critical(self, "Mesh", "select an input mesh")
         return
     else:
-      if CORBA.is_nil(self.__selectedMesh_L):
+      try:
+        self.__selectedMesh_R = self.smeshStudyTool.getMeshObjectFromSObject(mySObject)
+      except:
+        QMessageBox.critical(self, "Mesh", "select an input mesh")
+        return
+      if CORBA.is_nil(self.__selectedMesh_R):
         QMessageBox.critical(self, "Mesh", "select an input mesh")
         return
     myName = mySObject.GetName()
@@ -532,7 +534,6 @@ that you selected.
 
   def meshFileNameChanged(self, zone):
     """zone = L or R"""
-    #FIXME Change in name Gen new med
     if zone == 'L':
       self.meshIn_L=str(self.LE_MeshFile_L.text())
       self.isFile_L=False
