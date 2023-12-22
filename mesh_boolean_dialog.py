@@ -180,12 +180,12 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     else:
       symbol = '\u2216'
 
-    left_name = self.LE_MeshSmesh_L
+    left_name = str(self.LE_MeshSmesh_L.text())
     if self.isFile_L:
-      left_name = os.path.splitext(os.path.basename(self.LE_MeshFile_L.text()))[0]
-    right_name = self.LE_MeshSmesh_R
+      left_name = os.path.splitext(os.path.basename(str(self.LE_MeshFile_L.text())))[0]
+    right_name = str(self.LE_MeshSmesh_R.text())
     if self.isFile_R:
-      right_name = os.path.splitext(os.path.basename(self.LE_MeshFile_R.text()))[0]
+      right_name = os.path.splitext(os.path.basename(str(self.LE_MeshFile_R.text())))[0]
 
     engine = ""
     for key, val in ENGINE_DICT.items():

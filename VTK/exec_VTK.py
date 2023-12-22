@@ -31,10 +31,13 @@ def ReadPolyData(file_name):
   return poly_data
 
 def WriteSTLMesh(mesh, output_file):
-  writer = vtkSTLWriter()
-  writer.SetFileName(output_file)
-  writer.SetInputData(mesh)
-  writer.Write()
+  try:
+    writer = vtkSTLWriter()
+    writer.SetFileName(output_file)
+    writer.SetInputData(mesh)
+    writer.Write()
+  except Exception:
+      raise
 
 def handler_sigsev(signum, frame):
   sys.exit(1)
@@ -95,6 +98,8 @@ def boolean_operation(operation, fn1, fn2, out_name):
   except:
       raise IOError("Could not write the result in the STL file")
   end_time = time.time()
+  if not os.path.exists(new_out_name):
+      raise RuntimeError("Result has not been written correctly, an error occured during the boolean operation.")
   with open(new_out_name, 'r+') as file:
     content = file.read()
     modified_content = content.replace(',', '.')
