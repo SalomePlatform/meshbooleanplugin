@@ -46,7 +46,7 @@ ENGINE_BENCHMARK_DICT = {\
         'igl is a C++ geometry processing library.' : 1,\
         """VTK is a software for 3D visualization and can be used to perform Boolean operations.
 Our benchmark reveals that VTK is particularly slow, and this computational cost doesn't come with  a quality superior to the other engines.""" : 2,\
-        'Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements.' : 3, \
+        'Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements. In addition, this code can fail to understand the orientation of a mesh, which leads to an inverted inside/out determination.' : 3, \
         """Cork is designed to support Boolean operations between triangle meshes.
 Note that the development of this tool has stopped in 2013, and there are a lot of known issues.""" : 4,\
         """mcut is a C++ code that performs Booleans on meshes 'at fine scale'. It actually works with libigl.
@@ -374,6 +374,13 @@ that you selected.
     """zone = L or R"""
     self.GenObjFromMed(zone)
   
+  def set_cursor_busy(self):
+    QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+    self.repaint()
+
+  def restore_cursor(self):
+    QApplication.restoreOverrideCursor()
+    self.repaint()
 
   def PBOKPressed(self):
     import salome
@@ -382,11 +389,15 @@ that you selected.
     from salome.smesh import smeshBuilder
     if self.meshIn_R=="" or self.meshIn_R=="":
       return self.error_popup("Mesh", "select an input mesh")
+
+    self.set_cursor_busy()
     if self.__selectedMesh_L is not None or not self.meshIn_L.endswith(".obj"): self.prepareFichier("L")
     if self.__selectedMesh_R is not None or not self.meshIn_R.endswith(".obj"): self.prepareFichier("R")
     if not (os.path.isfile(self.meshIn_L)):
+      self.restore_cursor()
       return self.error_popup("File", "unable to read GMF Mesh in "+str(self.meshIn_L))
     if not (os.path.isfile(self.meshIn_R)):
+      self.restore_cursor()
       return self.error_popup("File", "unable to read GMF Mesh in "+str(self.meshIn_R))
 
     try:
@@ -394,6 +405,7 @@ that you selected.
       if os.path.exists(result_file):
         os.remove(result_file)
     except Exception as e:
+        self.restore_cursor()
         return self.error_popup("Creation of the temporary result file", e)
 
     try:
@@ -410,6 +422,7 @@ that you selected.
       elif (self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']):
         cgal_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
     except Exception as e:
+        self.restore_cursor()
         return self.error_popup("Error while performing the boolean", e)
 
     smesh = smeshBuilder.New()
@@ -418,8 +431,10 @@ that you selected.
     try:
       (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
     except Exception as e:
+      self.restore_cursor()
       return self.error_popup("Result import", e)
     if len(outputMesh) == 0:
+      self.restore_cursor()
       return self.error_popup("Not found", "MED result file not found.")
     outputMesh=outputMesh[0]
     name = ""
@@ -436,6 +451,7 @@ that you selected.
     outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
 
     if salome.sg.hasDesktop(): salome.sg.updateObjBrowser()
+    self.restore_cursor()
     computing_box = QMessageBox.about(None, "Compute","Computation successfuly finished")
     return True
 
