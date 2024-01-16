@@ -53,6 +53,8 @@ Note that the development of this tool has stopped in 2013, and there are a lot 
 It is widely used in the animation industry and in universities.
 This code is not robust and fails on most edge cases of out benchmark.""" : 5}
 
+LICENSE_DICT = { 0 : 'GPL and LGPL', 1 : 'MPL2', 2 : 'BSD-3', 3 : 'MIT', 4 : 'LGPL', 5 : 'GPL and commercial'}
+
 NB_TRIANGLES = [972, 1940, 6958, 27320, 110324, 441496, 1765412]
 UNION_TIME_DATA = [[0.1458, 0.2223, 0.5972, 1.8644, 7.4354, 33.7484, 190.1539], # CGAL
                     [0.1666, 0.2293, 0.247, 0.6063, 1.8354, 6.8085, 33.9464], # igl
@@ -347,9 +349,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   def DisplayEngineLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
-    for key, val in ENGINE_DICT.items():
-      if self.COB_Engine.currentIndex() == val:
-        self.label_Engine.setText(_translate("MyPlugDialog", f"Compute with the {key} engine"))
+    self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.COB_Engine.currentIndex()]} license."))
     for key, val in ENGINE_BENCHMARK_DICT.items():
       if self.COB_Engine.currentIndex() == val:
         self.label_Benchmark.setText(_translate("MyPlugDialog", key))
