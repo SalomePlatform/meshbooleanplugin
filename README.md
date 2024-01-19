@@ -5,10 +5,11 @@ Interface for performing boolean operations on meshes in SALOME
 Local Tests
 =======
 To try the plugin locally, follow these steps:
+1. Clone the repo to `$SMESH_ROOT_DIR/share/salome/plugins/smesh/`
 
-1. Open the file located at `$SMESH_ROOT_DIR/share/salome/plugins/smesh/smesh_plugins.py`.
+2. Open the file located at `$SMESH_ROOT_DIR/share/salome/plugins/smesh/smesh_plugins.py`.
 
-2. Add the following code to the end of the file:
+3. Add the following code to the end of the file:
    
 ```
 try:
@@ -18,9 +19,21 @@ except Exception as e:
 	salome_pluginsmanager.logger.info('ERROR: MeshBoolean plug-in is unavailable: {}'.format(e))
 	pass
 ```
+4. Create the ui.py files:
+got to the root of the plugin and run `make`
+
+5. Clone the backend codes with `./clone.sh`
+   
+6. Compile the project with
+```
+mkdir -p build
+cd build
+cmake ..
+make
+```
+7. Install the Python requirements with `pip install -r requirements.txt`
 
 How to use ?
 =======
-1. run the command 'make' (this generates the ui python file)
-2. start salome
-3. find the plugin with the other SMESH plugins
+1. start salome
+2. find the plugin with the other SMESH plugins
