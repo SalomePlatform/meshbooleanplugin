@@ -27,7 +27,7 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
 
   new_output_path = output_path[:-3] + 'off'
 
-  binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "MeshBooleanPlugin", "cork", "cork_bin")
+  binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "cork", "cork_bin")
   try:
     command = [binary_path, operation, new_mesh1_path, new_mesh2_path, new_output_path]
 

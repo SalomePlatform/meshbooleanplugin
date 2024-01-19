@@ -31,6 +31,6 @@ def MeshBoolean(context):
   import tempfile
   from qtsalome import QFileDialog, QMessageBox
   
-  import MeshBooleanPlugin.mesh_boolean_dialog as mesh_boolean_dialog
+  import meshbooleanplugin.mesh_boolean_dialog as mesh_boolean_dialog
   window = mesh_boolean_dialog.getDialog()
   window.show()
