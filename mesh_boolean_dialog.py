@@ -25,16 +25,16 @@ import os, subprocess
 import tempfile
 import re
 import sys
-from MeshBooleanPlugin.MyPlugDialog_ui import Ui_MyPlugDialog
+from meshbooleanplugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from qtsalome import *
 from PyQt5.QtCore import Qt
 import qwt
-from MeshBooleanPlugin.VTK.exec_VTK import VTK_main
-from MeshBooleanPlugin.InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
-from MeshBooleanPlugin.cork.exec_cork import cork_main
-from MeshBooleanPlugin.mcut.exec_mcut import mcut_main
-from MeshBooleanPlugin.libigl.exec_libigl import libigl_main
-from MeshBooleanPlugin.cgal.exec_cgal import cgal_main
+from meshbooleanplugin.VTK.exec_VTK import VTK_main
+from meshbooleanplugin.InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
+from meshbooleanplugin.cork.exec_cork import cork_main
+from meshbooleanplugin.mcut.exec_mcut import mcut_main
+from meshbooleanplugin.libigl.exec_libigl import libigl_main
+from meshbooleanplugin.cgal.exec_cgal import cgal_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \

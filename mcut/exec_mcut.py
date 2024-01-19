@@ -10,7 +10,7 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
     if not os.path.isabs(output_path):
         output_path = os.path.join(cwd, output_path)
     new_output_path = os.path.splitext(output_path)[0] + ".obj"
-    binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "MeshBooleanPlugin", "mcut", "CSGBoolean")
+    binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "mcut", "CSGBoolean")
     try:
         if operation == "union":
             operation = "-u"
