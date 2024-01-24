@@ -387,7 +387,7 @@ that you selected.
     import SMESH
     from salome.kernel import studyedit
     from salome.smesh import smeshBuilder
-    if self.meshIn_R=="" or self.meshIn_R=="":
+    if self.meshIn_R=="" or self.meshIn_L=="":
       return self.error_popup("Mesh", "select an input mesh")
 
     self.set_cursor_busy()
