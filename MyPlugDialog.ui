@@ -160,7 +160,7 @@
            </item>
            <item>
             <property name="text">
-             <string>Interactive And Robust Mesh Booleans</string>
+             <string>IRMB</string>
             </property>
            </item>
            <item>
@@ -209,7 +209,7 @@
       </font>
      </property>
      <property name="title">
-      <string>Left Mesh</string>
+      <string>Object Mesh</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,2,15,1">
       <property name="topMargin">
@@ -458,7 +458,7 @@
       <bool>false</bool>
      </property>
      <property name="title">
-      <string>Right Mesh</string>
+      <string>Tool Mesh</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0" columnstretch="1,2,15,1">
       <property name="sizeConstraint">
