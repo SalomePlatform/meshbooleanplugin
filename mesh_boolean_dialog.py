@@ -41,17 +41,13 @@ ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
         'Interactive And Robust Mesh Booleans' : 3, 'cork' : 4, 'mcut' : 5}
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
 
-ENGINE_BENCHMARK_DICT = {\
-        'CGAL is  is a C++ library that aims to provide easy access to efficient and reliable algorithms in computational geometry. It is known to provide robust algorithms.' : 0,\
-        'igl is a C++ geometry processing library.' : 1,\
-        """VTK is a software for 3D visualization and can be used to perform Boolean operations.
-Our benchmark reveals that VTK is particularly slow, and this computational cost doesn't come with  a quality superior to the other engines.""" : 2,\
-        'Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements. In addition, this code can fail to understand the orientation of a mesh, which leads to an inverted inside/out determination.' : 3, \
-        """Cork is designed to support Boolean operations between triangle meshes.
-Note that the development of this tool has stopped in 2013, and there are a lot of known issues.""" : 4,\
-        """mcut is a C++ code that performs Booleans on meshes 'at fine scale'. It actually works with libigl.
-It is widely used in the animation industry and in universities.
-This code is not robust and fails on most edge cases of out benchmark.""" : 5}
+ENGINE_MEANING_DICT = {\
+        'The Computational Geometry Algorithms Library' : 0,\
+        'Interactive Geometry Lab' : 1,\
+        'The Visualization Toolkit' : 2,\
+        'Interactive and Robust Mesh Booleans' : 3, \
+        'Cork' : 4,\
+        'Mesh Cutting' : 5}
 
 LICENSE_DICT = { 0 : 'GPL and LGPL', 1 : 'MPL2', 2 : 'BSD-3', 3 : 'MIT', 4 : 'LGPL', 5 : 'GPL and commercial'}
 
@@ -349,10 +345,10 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   def DisplayEngineLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
-    self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.COB_Engine.currentIndex()]} license."))
-    for key, val in ENGINE_BENCHMARK_DICT.items():
+    for key, val in ENGINE_MEANING_DICT.items():
       if self.COB_Engine.currentIndex() == val:
-        self.label_Benchmark.setText(_translate("MyPlugDialog", key))
+        self.label_Engine.setText(_translate("MyPlugDialog", key))
+    self.label_Benchmark.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.COB_Engine.currentIndex()]} license."))
     self.update_graph()
 
   def PBHelpPressed(self):
