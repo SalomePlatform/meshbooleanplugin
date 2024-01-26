@@ -1,15 +1,13 @@
 # Tests for the MMG plugin
 
-How to start
-========
+## How to start ##
 
 - step 1: to get salome envirnoment
 > `<SALOME_ROOT>/salome context`
 - step 2: to generate meshes
 > `make`
 
-How to run the testsuite
-========
+## How to run the testsuite ##
 
 To run the testsuite:
 1. Start SALOME
