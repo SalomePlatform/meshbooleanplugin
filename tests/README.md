@@ -3,7 +3,9 @@
 How to start
 ========
 
+- step 1: to get salome envirnoment
 > `<SALOME_ROOT>/salome context`
+- step 2: to generate meshes
 > `make`
 
 How to run the testsuite
