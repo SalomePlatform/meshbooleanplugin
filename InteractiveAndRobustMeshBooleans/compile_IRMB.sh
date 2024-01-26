@@ -3,6 +3,6 @@ cd InteractiveAndRobustMeshBooleans
 mkdir -p build
 cd build
 cmake ..
-make -j all
+make -j4
 mv mesh_booleans ../..
 cd ../..
