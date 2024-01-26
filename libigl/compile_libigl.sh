@@ -4,6 +4,6 @@ cd libigl
 mkdir -p build
 cd build
 cmake ..
-make -j all
+make -j4
 mv 609_Boolean ../..
 cd ../..
