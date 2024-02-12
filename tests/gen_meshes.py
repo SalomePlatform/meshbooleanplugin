@@ -75,7 +75,6 @@ status = sphere.AddHypothesis(Gmsh_Parameters)
 GMSH_2D_2 = sphere.Triangle(algo=smeshBuilder.GMSH_2D)
 isDone = cylinder.Compute()
 isDone = cube.Compute()
-sphere.Clear()
 smesh.SetName(sphere, 'sphere')
 try:
   sphere.ExportMED( f'{os.path.join(os.environ["PWD"], "samples", "sphere.med")}', 0, 41, 1, sphere, 1, [], '',-1, 1 )
@@ -94,7 +93,7 @@ try:
   pass
 except:
   print('ExportPartToMED() failed. Invalid file name?')
-
+isDone = sphere.Compute()
 
 ## Set names of Mesh objects
 smesh.SetName(GMSH_2D.GetAlgorithm(), 'GMSH_2D')

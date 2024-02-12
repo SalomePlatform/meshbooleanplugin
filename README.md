@@ -14,7 +14,7 @@ To try the plugin locally, follow these steps:
 ```
 try:
 	from meshbooleanplugin.mesh_boolean_plugin import MeshBoolean
-	salome_pluginsmanager.AddFunction('Boolean Mesh Cutting', 'Perform boolean operations on meshes', MeshBoolean)
+	salome_pluginsmanager.AddFunction('Boolean Mesh Operations', 'Perform boolean operations on meshes', MeshBoolean)
 except Exception as e:
 	salome_pluginsmanager.logger.info('ERROR: MeshBoolean plug-in is unavailable: {}'.format(e))
 	pass
