@@ -75,8 +75,9 @@ status = sphere.AddHypothesis(Gmsh_Parameters)
 GMSH_2D_2 = sphere.Triangle(algo=smeshBuilder.GMSH_2D)
 isDone = cylinder.Compute()
 isDone = cube.Compute()
-sphere.Clear()
+
 smesh.SetName(sphere, 'sphere')
+isDone = sphere.Compute()
 try:
   sphere.ExportMED( f'{os.path.join(os.environ["PWD"], "samples", "sphere.med")}', 0, 41, 1, sphere, 1, [], '',-1, 1 )
   pass

@@ -5,8 +5,11 @@ mcut/CSGBoolean
 mcut/mcut
 InteractiveAndRobustMeshBooleans/exec_IRMB
 InteractiveAndRobustMeshBooleans/InteractiveAndRobustMeshBooleans
+InteractiveAndRobustMeshBooleans/mesh_booleans
 libigl/exec_libigl
 libigl/libigl
+libigl/609_Boolean
+tests/samples/*
 cgal/exec_cgal
 cgal/cgal
 *_ui.py

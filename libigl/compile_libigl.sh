@@ -5,5 +5,5 @@ mkdir -p build
 cd build
 cmake ..
 make -j4
-mv 609_Boolean ../..
+cp -r ./bin/609_Boolean ./../../.
 cd ../..
