@@ -5,6 +5,7 @@ mcut/CSGBoolean
 mcut/mcut
 InteractiveAndRobustMeshBooleans/exec_IRMB
 InteractiveAndRobustMeshBooleans/InteractiveAndRobustMeshBooleans
+InteractiveAndRobustMeshBooleans/mesh_booleans
 libigl/exec_libigl
 libigl/libigl
 cgal/exec_cgal
