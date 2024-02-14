@@ -218,6 +218,7 @@ jobs:
     - name: configure
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
+        mkdir $SALOMELOCALINSTALL
         wget ftp://ftp.cea.fr/pub/salome/targz/SALOME-lite/SALOME-9.12.0-UB22.04-lite.tar.gz
         tar -xf SALOME-9.12.0-UB22.04-lite.tar.gz
         mv SALOME-9.12.0-UB22.04-lite $SALOMELOCALINSTALL/.
