@@ -213,8 +213,7 @@ jobs:
           libxcb-dri2-0-dev \
           libopenblas0-serial \
           libffi7 \
-          dvipng \
-          pypy-setuptool
+          dvipng
         update-alternatives --install /usr/bin/python python /usr/bin/python3 1
     - name: configure
       run: |
