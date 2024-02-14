@@ -1,0 +1,256 @@
+name: UB22.04
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.MD'
+      - '**.md'
+      - '**/.gitignore'
+      - '**.png'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.MD'
+      - '**.md'
+      - '**/.gitignore'
+      - '**.png'
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          apt-transport-https \
+          build-essential \
+          libblas-dev \
+          libboost-all-dev \
+          libboost-dev \
+          libbz2-dev \
+          libcgns-dev \
+          libcminpack-dev \
+          libcminpack1 \
+          libcppunit-dev \
+          libcurl4-openssl-dev \
+          libeigen3-dev \
+          libfftw3-dev \
+          libfreeimage-dev \
+          libfreeimage3 \
+          libfreetype6-dev \
+          libfreetype6 \
+          libgdal-dev \
+          libgeos-dev \
+          libgeotiff-dev \
+          libgif-dev \
+          libgl1-mesa-dev \
+          libgl2ps-dev \
+          libglfw3-dev \
+          freeglut3 \
+          fftw-dev \
+          freeglut3-dev \
+          libglu1-mesa-dev \
+          libgmp10 \
+          libgraphviz-dev \
+          libhdf5-dev \
+          libidn11-dev \
+          libjpeg-dev \
+          libjsoncpp-dev \
+          liblapack-dev \
+          liblzma5 \
+          liblzma-dev \
+          libmetis-dev \
+          libncurses5 \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libncurses6 \
+          libncursesw6 \
+          libnetcdf-dev \
+          libnlopt-dev \
+          libomniorb4-2 \
+          libomniorb4-dev \
+          libopenblas-dev \
+          libopencv-dev \
+          libopenmpi-dev \
+          libpcl1-dev \
+          libpcre3 \
+          libpcre3-dev \
+          libpng-dev \
+          libptscotch-6.1 \
+          libptscotch-dev \
+          libpython3.10-dev \
+          libqt5svg5-dev \
+          libqt5x11extras5-dev \
+          libqwt-qt5-dev \
+          libreadline8 \
+          libreadline-dev \
+          libscotch-dev \
+          libsqlite3-dev \
+          libssl-dev \
+          libtbb-dev \
+          libtcl8.6 \
+          libtiff5-dev \
+          libtk8.6 \
+          libudev1 \
+          libuuid1 \
+          libx11-dev \
+          libxcb-util0-dev \
+          libxext-dev \
+          libxft-dev \
+          libxi-dev \
+          libxkbcommon-dev \
+          libxkbcommon-x11-dev \
+          libxml2-dev \
+          libxmu-dev \
+          libxpm-dev \
+          libzstd1 \
+          llvm-dev \
+          apt-file \
+          apt-utils \
+          libbison-dev \
+          libblas-dev \
+          bison \
+          clang \
+          cmake \
+          coreutils \
+          curl \
+          cython3 \
+          doxygen \
+          emacs \
+          fftw-dev \
+          findutils \
+          flex \
+          ftp \
+          g++ \
+          gawk \
+          gfortran \
+          git \
+          graphviz \
+          gzip \
+          hdf5-tools \
+          lftp \
+          locales \
+          lsb-base \
+          lsof \
+          mawk \
+          mercurial \
+          mesa-utils \
+          mesa-utils-extra \
+          ncurses-base \
+          ncurses-bin \
+          ncurses-term \
+          omniidl \
+          omniorb-idl \
+          openmpi-bin \
+          openssh-client \
+          perl \
+          python3 \
+          python3-click \
+          python3-cycler \
+          python3-dev \
+          python3-distro \
+          python3-distro-info \
+          python3-kiwisolver \
+          python3-matplotlib \
+          python3-mpi4py \
+          python3-nose \
+          python3-notebook \
+          python3-numpy \
+          python3-numpydoc \
+          python3-opencv \
+          python3-openssl \
+          python3-pip \
+          python3-psutil \
+          python3-pyqt5 \
+          python3-pytest-cython \
+          python3-reportbug \
+          python3-scipy \
+          python3-sip-dev \
+          python3-sphinx \
+          python3-sphinxcontrib.websupport \
+          python3-sphinx-rtd-theme \
+          python3-statsmodels \
+          python3-stemmer \
+          pyqt5-dev \
+          pyqt5-dev-tools \
+          qtbase5-dev \
+          qttools5-dev \
+          qtxmlpatterns5-dev-tools \
+          readline-common \
+          scons \
+          sed \
+          sensible-utils \
+          sphinx-intl \
+          swig \
+          tar \
+          tcl-dev \
+          texlive-fonts-recommended \
+          texlive-latex-base \
+          texlive-latex-extra \
+          texlive-latex-recommended \
+          latex-cjk-all \
+          tk-dev \
+          wget \
+          zlib1g \
+          libopenmpi3 \
+          libopenmpi-dev \
+          libopenblas0 \
+          libopenblas-dev \
+          gzip \
+          gfortran \
+          g++ \
+          libeigen3-dev \
+          libgsl-dev \
+          liblz4-1 \
+          liblz4-dev \
+          liblzma-dev \
+          liblzma5 \
+          libxcb-dri2-0-dev \
+          libopenblas0-serial \
+          libffi7 \
+          dvipng \
+          pypy-setuptool
+        update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+    - name: configure
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        wget ftp://ftp.cea.fr/pub/salome/targz/SALOME-lite/SALOME-9.12.0-UB22.04-lite.tar.gz
+        tar -xf SALOME-9.12.0-UB22.04-lite.tar.gz
+        mv SALOME-9.12.0-UB22.04-lite $SALOMELOCALINSTALL/.
+        cp * $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh
+        echo "\n# mesh boolean plugin for SALOME\ntry:\n\tfrom meshbooleanplugin.mesh_boolean_plugin import MeshBoolean\n\tsalome_pluginsmanager.AddFunction('Boolean Mesh Operations', 'Perform boolean operations on meshes', MeshBoolean)\nexcept Exception as e:\n\tsalome_pluginsmanager.logger.info('ERROR: MeshBoolean plug-in is unavailable: {}'.format(e))\n\tpass" >> smesh_plugins.py
+        cd meshbooleanplugin
+    - name: make
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        make
+        ./clone.sh
+        mkdir -p build
+        cd build
+        cmake ..
+        make
+    - name: make check
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        ./../../../../../../../salome context
+        pip install -r requirements.txt
+        cd tests
+        runSalome.py -t gen_meshes.py
+        runSalome.py -t tests.py
+        # Save the log file(s) as an artifact
+        mkdir -p $GITHUB_WORKSPACE/artifacts
+        mv ./*.log ./*.txt $GITHUB_WORKSPACE/artifacts/ || true
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v2
+      with:
+        name: check-logs
+        path: $GITHUB_WORKSPACE/artifacts
