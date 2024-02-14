@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2007-2023  EDF
+# Copyright (C) 2007-2024  CEA DES
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -356,7 +356,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.update_graph()
 
   def PBHelpPressed(self):
-    QMessageBox.about(None, "About this boolean mesh cutting tool",
+    QMessageBox.about(None, "About this boolean mesh operation tool",
             """
 This tool allows you to apply boolean
 operators to your meshes. You can fill
@@ -448,11 +448,15 @@ that you selected.
       name = self.operator + '_' + str(self.difference_num)
       self.difference_num+=1
     smesh.SetName(outputMesh.GetMesh(), name)
-    outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
+#    outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
 
-    if salome.sg.hasDesktop(): salome.sg.updateObjBrowser()
+    if salome.sg.hasDesktop():
+      salome.sg.updateObjBrowser()
+      computing_box = QMessageBox.about(None, "Compute","Computation successfully finished")
+    else:
+      print("Computation successfully finished")
     self.restore_cursor()
-    computing_box = QMessageBox.about(None, "Compute","Computation successfuly finished")
+
     return True
 
   def getResumeData(self, separator="\n"):
