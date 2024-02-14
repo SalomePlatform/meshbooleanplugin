@@ -2,12 +2,15 @@ import os
 import subprocess
 import sys
 from itertools import permutations
+from PyQt5.QtWidgets import QApplication  # Import QApplication
 
 sys.path.append(os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin"))
 sys.path.append(os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh"))
 
 from mesh_boolean_dialog import *
 
+# Initialize QApplication
+app = QApplication(sys.argv)
 
 result_dict = {}
 
@@ -52,7 +55,14 @@ def generate_tests(path=SAMPLES_PATH):
             res += [Test(elt[0], elt[1], op, engine) for elt in lst]
     return res
 
-def check_ok(test):
+def check_ok(test, test_number):
+
+    print(f"\nTest #{test_number}: ")
+    print(f"   Engine      : {test.engine}")
+    print(f"   Operation   : {test.op}")
+    print(f"   Tool Mesh   : {test.tool}")
+    print(f"   Object Mesh : {test.obj}\n")
+
     dialog = MeshBooleanDialog()
 
     # Fake PBMeshFilePressed without Qt interface
@@ -95,8 +105,9 @@ def check_ok(test):
     return res
 
 def main():
+#    tests = generate_tests()[:2]  # Select only the first two tests
     tests = generate_tests()
-    for test in tests:
-        check_ok(test)
+    for i, test in enumerate(tests, start=1):
+        check_ok(test, i)
    
 main()
