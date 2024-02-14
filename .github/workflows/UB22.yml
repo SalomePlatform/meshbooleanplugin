@@ -214,7 +214,7 @@ jobs:
           libopenblas0-serial \
           libffi7 \
           dvipng
-        update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+        sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
     - name: configure
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
