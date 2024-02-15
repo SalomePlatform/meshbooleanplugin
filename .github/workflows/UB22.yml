@@ -243,8 +243,8 @@ jobs:
         ./../../../../../../../salome context
         pip install -r requirements.txt
         cd tests
-        python -t gen_meshes.py
-        python -t tests.py --engine cgal --operation difference intersection union
+        runSalome.py -t gen_meshes.py
+        python tests.py --engine cgal --operation difference intersection union
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts
         mv ./*.log ./*.txt $GITHUB_WORKSPACE/artifacts/ || true
