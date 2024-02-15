@@ -213,7 +213,8 @@ jobs:
           libxcb-dri2-0-dev \
           libopenblas0-serial \
           libffi7 \
-          dvipng
+          dvipng \
+          libcgal-dev
         sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
     - name: configure
       run: |
@@ -224,13 +225,13 @@ jobs:
         mv SALOME-9.12.0-UB22.04-lite $SALOMELOCALINSTALL/.
         mkdir $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
         cp -r * $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh
         echo "\n# mesh boolean plugin for SALOME\ntry:\n\tfrom meshbooleanplugin.mesh_boolean_plugin import MeshBoolean\n\tsalome_pluginsmanager.AddFunction('Boolean Mesh Operations', 'Perform boolean operations on meshes', MeshBoolean)\nexcept Exception as e:\n\tsalome_pluginsmanager.logger.info('ERROR: MeshBoolean plug-in is unavailable: {}'.format(e))\n\tpass" >> smesh_plugins.py
         cd meshbooleanplugin
     - name: make
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
-        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
         make
         ./clone.sh
         mkdir -p build
@@ -240,7 +241,7 @@ jobs:
     - name: make check
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
-        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
         ./../../../../../../../salome context
         pip install -r requirements.txt
         cd tests
