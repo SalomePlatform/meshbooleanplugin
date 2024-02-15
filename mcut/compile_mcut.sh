@@ -4,6 +4,6 @@ cd mcut
 mkdir -p build
 cd build
 cmake ..
-make -j4
+make -j all
 mv bin/CSGBoolean ../..
 cd ../..
