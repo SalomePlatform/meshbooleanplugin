@@ -247,8 +247,7 @@ jobs:
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t gen_meshes.py
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context
         export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH
-        pip install PythonQwt PyQt5
-        python tests.py --engine cgal --operation difference intersection union
+        $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t tests.py
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts
         mv ./*.log ./*.txt $GITHUB_WORKSPACE/artifacts/ || true

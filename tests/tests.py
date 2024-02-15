@@ -18,6 +18,10 @@ result_dict = {}
 ROOT_PATH = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "tests")
 SAMPLES_PATH = os.path.join(ROOT_PATH, 'samples')
 
+
+DEFAULT_ENGINE = ['cgal', 'vtk']
+DEFAULT_OPERATION = ['union']
+
 OPERATOR_DICT = { 'union' : 0, 'intersection' : 1, 'difference' : 2 }
 ENGINE_DICT = { 'cgal' : 0, 'igl' : 1, 'vtk' : 2, 'irmb' : 3, 'cork' : 4, 'mcut' : 5}
 BOLD = '\033[1m'
@@ -119,9 +123,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check if both engine and operation arguments are provided
-    if args.engine is None or args.operation is None:
-        parser.print_help()
-        sys.exit(1)
+    if args.engine is None:
+        args.engine = DEFAULT_ENGINE
+    if args.operation is None:
+        args.operation = DEFAULT_OPERATION
 
     main(args.engine, args.operation)
 
