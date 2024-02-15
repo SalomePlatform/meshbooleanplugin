@@ -19,3 +19,4 @@ cgal/cgal
 **/*.swo
 build
 **/logs.txt
+**/*.tar.gz

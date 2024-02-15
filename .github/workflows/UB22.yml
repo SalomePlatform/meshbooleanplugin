@@ -219,21 +219,19 @@ jobs:
     - name: configure
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
-        mkdir $SALOMELOCALINSTALL
+        mkdir -p $SALOMELOCALINSTALL
         wget ftp://ftp.cea.fr/pub/salome/targz/SALOME-lite/SALOME-9.12.0-UB22.04-lite.tar.gz
         tar -xf SALOME-9.12.0-UB22.04-lite.tar.gz
         mv SALOME-9.12.0-UB22.04-lite $SALOMELOCALINSTALL/.
-        mkdir $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        cp -r * $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite//BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        mkdir -p $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        cp -r * $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
         cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh
         echo "\n# mesh boolean plugin for SALOME\ntry:\n\tfrom meshbooleanplugin.mesh_boolean_plugin import MeshBoolean\n\tsalome_pluginsmanager.AddFunction('Boolean Mesh Operations', 'Perform boolean operations on meshes', MeshBoolean)\nexcept Exception as e:\n\tsalome_pluginsmanager.logger.info('ERROR: MeshBoolean plug-in is unavailable: {}'.format(e))\n\tpass" >> smesh_plugins.py
-        cd meshbooleanplugin
     - name: make
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
         cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        make
-        ./clone.sh
+        make all
         mkdir -p build
         cd build
         cmake ..
@@ -245,8 +243,8 @@ jobs:
         ./../../../../../../../salome context
         pip install -r requirements.txt
         cd tests
-        runSalome.py -t gen_meshes.py
-        runSalome.py -t tests.py
+        python -t gen_meshes.py
+        python -t tests.py --engine cgal --operation difference intersection union
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts
         mv ./*.log ./*.txt $GITHUB_WORKSPACE/artifacts/ || true
