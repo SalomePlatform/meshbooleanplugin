@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import argparse
 from itertools import permutations
 from PyQt5.QtWidgets import QApplication  # Import QApplication
 
@@ -104,10 +105,17 @@ def check_ok(test, test_number):
 
     return res
 
-def main():
-#    tests = generate_tests()[:2]  # Select only the first two tests
+def main(engine_list, operation_list):
     tests = generate_tests()
     for i, test in enumerate(tests, start=1):
-        check_ok(test, i)
-   
-main()
+        if test.engine in engine_list and test.op in operation_list:
+            check_ok(test, i)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Mesh Boolean Tests')
+    parser.add_argument('--engine', nargs='+', help='List of engines to test')
+    parser.add_argument('--operation', nargs='+', help='List of operations to test')
+    args = parser.parse_args()
+
+    main(args.engine, args.operation)
+
