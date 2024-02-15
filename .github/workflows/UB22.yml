@@ -215,8 +215,7 @@ jobs:
           libopenblas0-serial \
           libffi7 \
           dvipng \
-          libcgal-dev \
-          qt5-default
+          libcgal-dev
         sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
     - name: configure
       run: |
@@ -248,6 +247,7 @@ jobs:
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t gen_meshes.py
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context
         export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH
+        export QT_QPA_PLATFORM=offscreen
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/KERNEL/bin/salome/runSalome.py -t tests.py
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts
