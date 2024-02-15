@@ -4,6 +4,7 @@ cd libigl
 mkdir -p build
 cd build
 cmake ..
-make -j all
+cd tutorial
+make tutorial/CMakeFiles/609_Boolean.dir/rule -j2
 cp -r ./bin/609_Boolean ./../../.
 cd ../..
