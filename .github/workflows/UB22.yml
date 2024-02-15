@@ -236,15 +236,15 @@ jobs:
         cd build
         cmake ..
         make
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+        $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context
+        pip install -r requirements.txt
     - name: make check
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
-        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        ./../../../../../../../salome context
-        pip install -r requirements.txt
-        cd tests
-        ./../../../../../../../salome context
-        ./../../../../../../../../salome -t gen_meshes.py
+        cd $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests
+        $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context
+        $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t gen_meshes.py
         python tests.py --engine cgal --operation difference intersection union
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts
