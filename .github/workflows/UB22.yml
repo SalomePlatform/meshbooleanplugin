@@ -167,6 +167,7 @@ jobs:
           python3-pip \
           python3-psutil \
           python3-pyqt5 \
+          python3-pyqt5.qtsvg \
           python3-pytest-cython \
           python3-reportbug \
           python3-scipy \
@@ -246,7 +247,7 @@ jobs:
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t gen_meshes.py
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context
         export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH
-        pip install PythonQwt
+        pip install PythonQwt PyQt5
         python tests.py --engine cgal --operation difference intersection union
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts

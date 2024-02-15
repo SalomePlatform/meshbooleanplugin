@@ -113,6 +113,7 @@ def main(engine_list, operation_list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mesh Boolean Tests')
+    parser.add_argument('-t', nargs='+', help='Run tests in TUI')
     parser.add_argument('--engine', nargs='+', help='List of engines to test')
     parser.add_argument('--operation', nargs='+', help='List of operations to test')
     args = parser.parse_args()
