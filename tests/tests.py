@@ -117,5 +117,10 @@ if __name__ == "__main__":
     parser.add_argument('--operation', nargs='+', help='List of operations to test')
     args = parser.parse_args()
 
+    # Check if both engine and operation arguments are provided
+    if args.engine is None or args.operation is None:
+        parser.print_help()
+        sys.exit(1)
+
     main(args.engine, args.operation)
 
