@@ -248,11 +248,13 @@ jobs:
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t gen_meshes.py
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context
         export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH
+        echo $PYTHONPATH
         export QT_QPA_PLATFORM=offscreen
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t tests.py
+        less $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt
         # Save the log file(s) as an artifact
         mkdir -p $GITHUB_WORKSPACE/artifacts
-        mv ./*.log ./*.txt $GITHUB_WORKSPACE/artifacts/ || true
+        mv ./*.log ./*.txt  $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt $GITHUB_WORKSPACE/artifacts/ || true
 
     - name: Upload logs
       uses: actions/upload-artifact@v2
