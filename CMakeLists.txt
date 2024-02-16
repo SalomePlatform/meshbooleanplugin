@@ -3,7 +3,7 @@ project(BooleanMeshOperation)
 
 option(BUILD_CGAL "Build CGAL engine" ON)
 option(BUILD_MCUT "Build MCUT engine" OFF)
-option(BUILD_IRMB "Build IRMB engine" OFF)
+option(BUILD_IRMB "Build IRMB engine" ON)
 option(BUILD_CORK "Build Cork engine" OFF)
 option(BUILD_IGL  "Build IGL engine"  OFF)
 
