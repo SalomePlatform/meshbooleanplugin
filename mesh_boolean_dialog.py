@@ -29,7 +29,7 @@ from meshbooleanplugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from qtsalome import *
 from PyQt5.QtCore import Qt
 import qwt
-from meshbooleanplugin.VTK.exec_VTK import VTK_main
+from meshbooleanplugin.vtk.exec_vtk import VTK_main
 from meshbooleanplugin.irmb.exec_irmb import IRMB_main
 from meshbooleanplugin.cork.exec_cork import cork_main
 from meshbooleanplugin.mcut.exec_mcut import mcut_main
@@ -37,7 +37,7 @@ from meshbooleanplugin.libigl.exec_libigl import libigl_main
 from meshbooleanplugin.cgal.exec_cgal import cgal_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
-ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
+ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'vtk' : 2, \
         'irmb' : 3, 'cork' : 4, 'mcut' : 5}
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
 
@@ -409,7 +409,7 @@ that you selected.
         return self.error_popup("Creation of the temporary result file", e)
 
     try:
-      if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
+      if (self.COB_Engine.currentIndex() == ENGINE_DICT['vtk']):
         VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
       elif (self.COB_Engine.currentIndex() == ENGINE_DICT['irmb']):
         IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
