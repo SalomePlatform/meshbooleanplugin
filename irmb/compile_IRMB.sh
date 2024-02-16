@@ -1,5 +1,5 @@
 #!/bin/sh
-cd InteractiveAndRobustMeshBooleans
+cd irmb
 mkdir -p build
 cd build
 cmake ..

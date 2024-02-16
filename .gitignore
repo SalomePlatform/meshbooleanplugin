@@ -3,9 +3,9 @@ cork/cork_bin
 cork/cork
 mcut/CSGBoolean
 mcut/mcut
-InteractiveAndRobustMeshBooleans/exec_IRMB
-InteractiveAndRobustMeshBooleans/InteractiveAndRobustMeshBooleans
-InteractiveAndRobustMeshBooleans/mesh_booleans
+irmb/exec_IRMB
+irmb/irmb
+irmb/mesh_booleans
 libigl/exec_libigl
 libigl/libigl
 libigl/609_Boolean

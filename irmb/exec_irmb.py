@@ -11,7 +11,7 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
   obj_output_path = os.path.splitext(output_path)[0] + ".obj"
   if (operation == "difference"):
       operation = "subtraction"
-  binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "InteractiveAndRobustMeshBooleans", "mesh_booleans")
+  binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "irmb", "mesh_booleans")
   command = [binary_path, operation, mesh1_path, mesh2_path, obj_output_path]
 
   with open(os.devnull, 'w') as null_file:

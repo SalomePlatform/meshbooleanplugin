@@ -155,12 +155,12 @@
            </item>
            <item>
             <property name="text">
-             <string>VTK</string>
+             <string>vtk</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Interactive And Robust Mesh Booleans</string>
+             <string>irmb</string>
             </property>
            </item>
            <item>
