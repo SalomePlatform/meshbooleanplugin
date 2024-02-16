@@ -248,6 +248,8 @@ jobs:
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t gen_meshes.py
         $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome context && \
           export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH && \
+          export QT_QPA_PLATFORM=offscreen && \
+          echo "PYTHON PATH IS" && \
           echo $PYTHONPATH && \
           $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/salome -t tests.py
         less $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt
