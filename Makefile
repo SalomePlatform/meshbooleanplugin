@@ -20,24 +20,15 @@ MCUT_VERSION=1.2.0
 IRMB_VERSION=main
 
 
-
-CGAL_DOWNLOAD = wget -c  https://github.com/CGAL/cgal/archive/refs/tags/v$(CGAL_VERSION).tar.gz \
-                     -O ./cgal/cgal-$(CGAL_VERSION).tar.gz
-
-LIBIGL_DOWNLOAD = wget -c  https://github.com/libigl/libigl/archive/refs/tags/v$(LIBIGL_VERSION).tar.gz \
-                     -O ./libigl/libigl-$(LIBIGL_VERSION).tar.gz
-
-CORK_DOWNLOAD = wget -c  https://github.com/gilbo/cork/archive/refs/heads/$(CORK_VERSION).tar.gz \
-                     -O ./cork/cork-$(CORK_VERSION).tar.gz
-
-MCUT_DOWNLOAD = wget -c  https://github.com/cutdigital/mcut/archive/refs/tags/v$(MCUT_VERSION).tar.gz \
-                     -O ./mcut/mcut-$(MCUT_VERSION).tar.gz
-
-IRMB_DOWNLOAD = wget -c   https://github.com/gcherchi/InteractiveAndRobustMeshBooleans/archive/refs/heads/$(IRMB_VERSION).tar.gz \
-                     -O ./InteractiveAndRobustMeshBooleans/InteractiveAndRobustMeshBooleans-$(IRMB_VERSION).tar.gz
+# Define commands to download library source code archives
+CGAL_DOWNLOAD   = wget -c  https://github.com/CGAL/cgal/archive/refs/tags/v$(CGAL_VERSION).tar.gz -O ./cgal/cgal-$(CGAL_VERSION).tar.gz
+LIBIGL_DOWNLOAD = wget -c  https://github.com/libigl/libigl/archive/refs/tags/v$(LIBIGL_VERSION).tar.gz -O ./libigl/libigl-$(LIBIGL_VERSION).tar.gz
+CORK_DOWNLOAD   = wget -c  https://github.com/gilbo/cork/archive/refs/heads/$(CORK_VERSION).tar.gz -O ./cork/cork-$(CORK_VERSION).tar.gz
+MCUT_DOWNLOAD   = wget -c  https://github.com/cutdigital/mcut/archive/refs/tags/v$(MCUT_VERSION).tar.gz -O ./mcut/mcut-$(MCUT_VERSION).tar.gz
+IRMB_DOWNLOAD   = wget -c   https://github.com/gcherchi/InteractiveAndRobustMeshBooleans/archive/refs/heads/$(IRMB_VERSION).tar.gz -O ./irmb/irmb-$(IRMB_VERSION).tar.gz
 
 
-
+# List of targets to be executed
 LIST_MAKE_EXECUTE = \
   download-dependencies \
   cgal-build   \
@@ -62,7 +53,7 @@ download-dependencies:
 	@if [ ! -f ./mcut/mcut-$(MCUT_VERSION).tar.gz ]; then \
 		$(MCUT_DOWNLOAD); \
 	fi
-	@if [ ! -f ./InteractiveAndRobustMeshBooleans/InteractiveAndRobustMeshBooleans-$(IRMB_VERSION).tar.gz ]; then \
+	@if [ ! -f ./irmb/irmb-$(IRMB_VERSION).tar.gz ]; then \
 		$(IRMB_DOWNLOAD); \
 	fi
 
@@ -143,10 +134,10 @@ irmb-build:
 	@echo "*---------------------------------*"
 	@echo "   untaring irmb-$(IRMB_VERSION).tar.gz"
 	@echo "*---------------------------------*"
-	if [ ! -d "InteractiveAndRobustMeshBooleans/InteractiveAndRobustMeshBooleans" ]; then \
-		cd InteractiveAndRobustMeshBooleans    && \
-		[ ! -d "InteractiveAndRobustMeshBooleans" ]  && tar -xf InteractiveAndRobustMeshBooleans-$(IRMB_VERSION).tar.gz && \
-		mv InteractiveAndRobustMeshBooleans-$(IRMB_VERSION) InteractiveAndRobustMeshBooleans  ; \
+	if [ ! -d "irmb/irmb" ]; then \
+		cd irmb    && \
+		[ ! -d "irmb" ]  && tar -xf irmb-$(IRMB_VERSION).tar.gz && \
+		mv InteractiveAndRobustMeshBooleans-$(IRMB_VERSION) irmb  ; \
 	else \
 		echo "irmb directory already exists, skipping untar operation."; \
 	fi

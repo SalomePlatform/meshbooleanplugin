@@ -30,7 +30,7 @@ from qtsalome import *
 from PyQt5.QtCore import Qt
 import qwt
 from meshbooleanplugin.VTK.exec_VTK import VTK_main
-from meshbooleanplugin.InteractiveAndRobustMeshBooleans.exec_InteractiveAndRobustMeshBooleans import IRMB_main
+from meshbooleanplugin.irmb.exec_irmb import IRMB_main
 from meshbooleanplugin.cork.exec_cork import cork_main
 from meshbooleanplugin.mcut.exec_mcut import mcut_main
 from meshbooleanplugin.libigl.exec_libigl import libigl_main
@@ -38,7 +38,7 @@ from meshbooleanplugin.cgal.exec_cgal import cgal_main
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'VTK' : 2, \
-        'Interactive And Robust Mesh Booleans' : 3, 'cork' : 4, 'mcut' : 5}
+        'irmb' : 3, 'cork' : 4, 'mcut' : 5}
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
 
 ENGINE_BENCHMARK_DICT = {\
@@ -46,7 +46,7 @@ ENGINE_BENCHMARK_DICT = {\
         'igl is a C++ geometry processing library.' : 1,\
         """VTK is a software for 3D visualization and can be used to perform Boolean operations.
 Our benchmark reveals that VTK is particularly slow, and this computational cost doesn't come with  a quality superior to the other engines.""" : 2,\
-        'Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements. In addition, this code can fail to understand the orientation of a mesh, which leads to an inverted inside/out determination.' : 3, \
+        'IRMB Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements. In addition, this code can fail to understand the orientation of a mesh, which leads to an inverted inside/out determination.' : 3, \
         """Cork is designed to support Boolean operations between triangle meshes.
 Note that the development of this tool has stopped in 2013, and there are a lot of known issues.""" : 4,\
         """mcut is a C++ code that performs Booleans on meshes 'at fine scale'. It actually works with libigl.
@@ -194,7 +194,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       if val == self.COB_Engine.currentIndex():
         engine = key
 
-    if engine == "Interactive And Robust Mesh Booleans":
+    if engine == "irmb":
       engine = "IRMB" # prettier display
 
     self.label_summup.setText(_translate("MyPlugDialog", f"({engine}) : {left_name} {symbol} {right_name}"))
@@ -411,7 +411,7 @@ that you selected.
     try:
       if (self.COB_Engine.currentIndex() == ENGINE_DICT['VTK']):
         VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['Interactive And Robust Mesh Booleans']):
+      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['irmb']):
         IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
       elif (self.COB_Engine.currentIndex() == ENGINE_DICT['cork']):
         cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
