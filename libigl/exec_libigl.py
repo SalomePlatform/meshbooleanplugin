@@ -9,7 +9,10 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
   if not os.path.isabs(output_path):
     output_path = os.path.join(cwd, output_path)
   new_out_name = os.path.splitext(output_path)[0] + ".obj"
-  binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "libigl", "609_Boolean")
+  if 'LIBIGL_ROOT_DIR' in os.environ:
+    binary_path = os.path.join(os.environ["LIBIGL_ROOT_DIR"], "bin", "609_Boolean")
+  else:
+    binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "libigl", "609_Boolean")
   try:
     command = [binary_path, operation, mesh1_path, mesh2_path, new_out_name]
     start_time = time.time()
