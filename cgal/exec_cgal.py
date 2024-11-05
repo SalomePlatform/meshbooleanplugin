@@ -2,6 +2,8 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
   import subprocess
   import os
   import time
+  import platform
+
   RED = '\033[91m'
   RESET = '\033[0m"'
 
@@ -10,10 +12,13 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
     output_path = os.path.join(cwd, output_path)
 
   new_output_path = output_path[:-3] + 'off'
-  if 'CGAL_ROOT_DIR' in os.environ:
-    binary_path = os.path.join(os.environ["CGAL_ROOT_DIR"], "bin", "exec_cgal")
+  if platform.system() == "Windows" :
+    binary_path = "exec_cgal.exe"
   else:
-    binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "cgal", "exec_cgal")
+    if 'CGAL_ROOT_DIR' in os.environ:
+      binary_path = os.path.join(os.environ["CGAL_ROOT_DIR"], "bin", "exec_cgal")
+    else:
+      binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "cgal", "exec_cgal")
   try:
     command = [binary_path, operation, mesh1_path, mesh2_path, new_output_path]
 
