@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -258,7 +258,7 @@ jobs:
         mv ./*.log ./*.txt  $SALOMELOCALINSTALL/SALOME-9.12.0-UB22.04-lite/BINARIES-UB22.04/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt $GITHUB_WORKSPACE/artifacts/ || true
 
     - name: Upload logs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: check-logs
         path: $GITHUB_WORKSPACE/artifacts
