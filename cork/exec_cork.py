@@ -2,6 +2,8 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
   import subprocess
   import os
   import time
+  import platform
+
   RED = '\033[91m'
   RESET = '\033[0m"'
 
@@ -27,7 +29,13 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
 
   new_output_path = output_path[:-3] + 'off'
 
-  binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "cork", "cork_bin")
+  if platform.system() == "Windows" :
+    binary_path = "wincork.exe"
+  else:
+    if 'CORK_ROOT_DIR' in os.environ:
+      binary_path = os.path.join(os.environ["CORK_ROOT_DIR"], "bin", "cork_bin")
+    else:
+      binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "cork", "cork_bin")
   try:
     command = [binary_path, operation, new_mesh1_path, new_mesh2_path, new_output_path]
 
