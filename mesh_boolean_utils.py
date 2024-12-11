@@ -30,7 +30,7 @@ def meshIOConvert(file_in, file_out):
   """
   Convert files with meshio
   """
-  command = ['python3', '-c', f'import meshio; m = meshio.read("{file_in}"); m.write("{file_out}")']
+  command = ['python3', '-c', f'import meshio; m = meshio.read(r"{file_in}"); m.write(r"{file_out}")']
   #command = ['meshio', 'convert', file_in, file_out]
   execCommand(command)
   if os.path.getsize(file_out) == 0:
