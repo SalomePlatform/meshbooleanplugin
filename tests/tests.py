@@ -7,6 +7,17 @@ from PyQt5.QtWidgets import QApplication  # Import QApplication
 
 sys.path.append(os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin"))
 sys.path.append(os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh"))
+MESHBOOLEANGPLUGIN_ROOT_DIR = None
+try:
+  MESHBOOLEANGPLUGIN_ROOT_DIR = os.environ["MESHBOOLEANGPLUGIN_ROOT_DIR"]
+except KeyError:
+  pass
+
+if MESHBOOLEANGPLUGIN_ROOT_DIR:
+  sys.path.append(os.path.join(MESHBOOLEANGPLUGIN_ROOT_DIR, "plugins", "meshbooleanplugin"))
+  ROOT_PATH = os.path.join(MESHBOOLEANGPLUGIN_ROOT_DIR, "plugins", "meshbooleanplugin", "tests")
+else:
+  ROOT_PATH = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "tests")
 
 from mesh_boolean_dialog import *
 
@@ -15,7 +26,6 @@ app = QApplication(sys.argv)
 
 result_dict = {}
 
-ROOT_PATH = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "tests")
 SAMPLES_PATH = os.path.join(ROOT_PATH, 'samples')
 
 

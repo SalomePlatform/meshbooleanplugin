@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2007-2024  CEA DES
+# Copyright (C) 2007-2024  CEA, EDF
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -18,9 +18,6 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# Modules Python
-# Modules Eficas
-
 import os, subprocess
 import tempfile
 import re
@@ -35,6 +32,7 @@ from meshbooleanplugin.cork.exec_cork import cork_main
 from meshbooleanplugin.mcut.exec_mcut import mcut_main
 from meshbooleanplugin.libigl.exec_libigl import libigl_main
 from meshbooleanplugin.cgal.exec_cgal import cgal_main
+from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'vtk' : 2, \
@@ -98,6 +96,13 @@ DIFFERENCE_AVG_QUALITY_DATA = [[0.6344, 0.7006, 0.7648, 0.8376, 0.8886, 0.9192, 
                         [0.5958, 0.6503, 0.7237, 0.7999, 0.8698, 0.9054, 0.9278],
                         [0.6341, 0.7003, 0.7646, 0.8375, 0.8885, 0.9191, 0.9350],
                         [0.6318, 0.6878, 0.7676, 0.8374, 0.8907, 0.9164, 0.9360]]
+
+
+def getTmpFileName(suffix=None, prefix=None):
+  tempdir = tempfile.gettempdir()
+  tmp_file = tempfile.NamedTemporaryFile(suffix=suffix, prefix=prefix, dir=tempdir, delete=False)
+  tmp_filename = tmp_file.name
+  return tmp_filename
 
 class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   """
@@ -205,96 +210,34 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
   def GenObjFromMed(self, zone):
     """zone = L or R"""
+    # Get selected mesh or file name
     if zone == "L":
-      m = None
-      if self.__selectedMesh_L is not None: # Case left is mesh
-        try:
-          self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          if os.path.exists(self.meshIn_L):
-            os.remove(self.meshIn_L)
-        except Exception as e:
-          return self.error_popup("Temporary file creation", e)
-
-        try:
-          self.__selectedMesh_L.ExportSTL(self.meshIn_L, self.meshIn_L)
-
-          # The following is a method to use meshio without SALOME crashing
-          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_L}"); m.write("{os.path.splitext(self.meshIn_L)[0] + ".obj"}")']
-          with open(os.devnull, 'w') as null_file:
-            try:
-              subprocess.check_call(command, stdout=null_file, stderr=null_file)
-            except Exception as e:
-              raise
-          # m = meshio.read(self.meshIn_L)
-          self.meshIn_L = os.path.splitext(self.meshIn_L)[0] + ".obj"
-          # m.write(self.meshIn_L)
-        except Exception as e:
-          return self.error_popup("Mesh export", e)
-      else: # Case left is file
-        try:
-          tempname=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          if os.path.exists(tempname):
-            os.remove(tempname)
-          # The following is a method to use meshio without SALOME crashing
-          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_L}"); m.write("{tempname}"); m = meshio.read("{tempname}"); m.write("{os.path.splitext(tempname)[0] + ".obj"}")']
-          with open(os.devnull, 'w') as null_file:
-            try:
-              subprocess.check_call(command, stdout=null_file, stderr=null_file)
-            except Exception as e:
-              raise
-          #m = meshio.read(self.meshIn_L)
-          #self.meshIn_L=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          #if os.path.exists(self.meshIn_L):
-          #  os.remove(self.meshIn_L)
-          #m.write(self.meshIn_L)
-          #m = meshio.read(self.meshIn_L) # Manip to avoid meshio from crashing if tetra cells
-          self.meshIn_L = os.path.splitext(tempname)[0] + ".obj"
-          #m.write(self.meshIn_L)
-        except Exception as e:
-          return self.error_popup("File handling", e)
+      selectedMesh = self.__selectedMesh_L
+      meshIn = self.meshIn_L
     else:
-      if self.__selectedMesh_R is not None: # Case right is mesh
-        try:
-          self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          if os.path.exists(self.meshIn_R):
-            os.remove(self.meshIn_R)
-        except Exception as e:
-          return self.error_popup("Temporary file creation", e)
+      selectedMesh = self.__selectedMesh_R
+      meshIn = self.meshIn_R
 
-        try:
-          self.__selectedMesh_R.ExportSTL(self.meshIn_R, self.meshIn_R)
-          # The following is a method to use meshio without SALOME crashing
-          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_R}"); m.write("{os.path.splitext(self.meshIn_R)[0] + ".obj"}")']
-          with open(os.devnull, 'w') as null_file:
-            try:
-              subprocess.check_call(command, stdout=null_file, stderr=null_file)
-            except Exception as e:
-              raise
-          #m = meshio.read(self.meshIn_R)
-          self.meshIn_R = os.path.splitext(self.meshIn_R)[0] + ".obj"
-          #m.write(self.meshIn_R)
-        except Exception as e:
-          return self.error_popup("Mesh export", e)
-      else: # Case right is file
-        try:
-          tempname=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          if os.path.exists(tempname):
-            os.remove(tempname)
-          # The following is a method to use meshio without SALOME crashing
-          command = ['python3', '-c', f'import meshio; import os; m = meshio.read("{self.meshIn_R}"); m.write("{tempname}"); m = meshio.read("{tempname}"); m.write("{os.path.splitext(tempname)[0] + ".obj"}")']
-          with open(os.devnull, 'w') as null_file:
-            try:
-              subprocess.check_call(command, stdout=null_file, stderr=null_file)
-            except Exception as e:
-              raise
-          #m = meshio.read(self.meshIn_R)
-          #self.meshIn_R=tempfile.mktemp(suffix=".stl",prefix="ForBMC_")
-          #m.write(self.meshIn_R)
-          #m = meshio.read(self.meshIn_R) # Manip to avoid meshio from crashing if tetra cells
-          self.meshIn_R = os.path.splitext(tempname)[0] + ".obj"
-          #m.write(self.meshIn_R)
-        except Exception as e:
-          return self.error_popup("File handling", e)
+    objTmpFileName = getTmpFileName(suffix=".obj", prefix="ForBMC_")
+    stlTmpFileName = getTmpFileName(suffix=".stl",prefix="ForBMC_")
+    if meshIn[:-3] not in ["obj", "stl"] and selectedMesh is None:
+      # if a file is selected, first convert it to stl to get triangles only
+      # otherwise meshio convert to obj fails
+      meshIOConvert(meshIn, stlTmpFileName)
+      meshIn = stlTmpFileName
+    elif selectedMesh is not None:
+      # export selected mesh to STL
+      try:
+        selectedMesh.ExportSTL(stlTmpFileName, False) # isascci
+      except Exception as e:
+        return self.error_popup("Mesh export", e)
+      meshIn = stlTmpFileName
+    # Convert file to OBJ
+    meshIOConvert(meshIn, objTmpFileName)
+    if zone == "L":
+      self.meshIn_L = objTmpFileName
+    else:
+      self.meshIn_R = objTmpFileName
 
   def update_graph(self):
     from PyQt5 import QtCore
@@ -391,22 +334,26 @@ that you selected.
       return self.error_popup("Mesh", "select an input mesh")
 
     self.set_cursor_busy()
-    if self.__selectedMesh_L is not None or not self.meshIn_L.endswith(".obj"): self.prepareFichier("L")
-    if self.__selectedMesh_R is not None or not self.meshIn_R.endswith(".obj"): self.prepareFichier("R")
+    if self.__selectedMesh_L is not None or not self.meshIn_L.endswith(".obj"):
+      try:
+        self.prepareFichier("L")
+      except Exception as e:
+          self.restore_cursor()
+          return self.error_popup("Error when converting the left mesh ", e)
+    if self.__selectedMesh_R is not None or not self.meshIn_R.endswith(".obj"):
+      try:
+        self.prepareFichier("R")
+      except Exception as e:
+          self.restore_cursor()
+          return self.error_popup("Error when converting the right mesh ", e)
     if not (os.path.isfile(self.meshIn_L)):
       self.restore_cursor()
-      return self.error_popup("File", "unable to read GMF Mesh in "+str(self.meshIn_L))
+      return self.error_popup("File", "unable to read mesh in "+str(self.meshIn_L))
     if not (os.path.isfile(self.meshIn_R)):
       self.restore_cursor()
-      return self.error_popup("File", "unable to read GMF Mesh in "+str(self.meshIn_R))
+      return self.error_popup("File", "unable to read mesh in "+str(self.meshIn_R))
 
-    try:
-      result_file =tempfile.mktemp(suffix=".med",prefix="ForBMC_")
-      if os.path.exists(result_file):
-        os.remove(result_file)
-    except Exception as e:
-        self.restore_cursor()
-        return self.error_popup("Creation of the temporary result file", e)
+    result_file = getTmpFileName(suffix=".med",prefix="ForBMC_")
 
     try:
       if (self.COB_Engine.currentIndex() == ENGINE_DICT['vtk']):
@@ -458,18 +405,6 @@ that you selected.
     self.restore_cursor()
 
     return True
-
-  def getResumeData(self, separator="\n"):
-    text=""
-    text+="RepairBeforeCompute="+str(self.CB_RepairBeforeCompute.isChecked())+separator
-    text+="SwapEdge="+str(self.CB_SwapEdge.isChecked())+separator
-    text+="MoveEdge="+str(self.CB_MoveEdge.isChecked())+separator
-    text+="InsertEdge="+str(self.CB_InsertEdge.isChecked())+separator
-    text+="GeometricalApproximation="+str(self.SP_Geomapp.value())+separator
-    text+="Hmin="+str(self.SP_Hmin.value())+separator
-    text+="Hmax="+str(self.SP_Hmax.value())+separator
-    text+="MeshGradation="+str(self.SP_Gradation.value())+separator
-    return str(text)
 
   def PBCancelPressed(self):
     self.close()
@@ -537,13 +472,15 @@ that you selected.
         return
     myName = mySObject.GetName()
 
-    if zone == 'L':
+    # set mesh name to input field
+    # only if it differs from the other mesh
+    if zone == 'L' and myName != self.meshIn_R:
       #self.currentName = myName
       self.meshIn_L=myName
       self.LE_MeshSmesh_L.setText(myName)
       self.LE_MeshFile_L.setText("")
       self.isFile_L = False
-    else:
+    elif zone == 'R' and myName != self.meshIn_L:
       #self.currentName = myName
       self.meshIn_R=myName
       self.LE_MeshSmesh_R.setText(myName)

@@ -92,6 +92,7 @@ ELSE ()
   SET(_plugin_SCRIPTS
     mesh_boolean_plugin.py
     mesh_boolean_dialog.py
+    mesh_boolean_utils.py
     MyPlugDialog.ui
   )
 
@@ -104,7 +105,7 @@ ELSE ()
 
   # Installation
   SET(Mesh_Boolean_INSTALL_PLUGIN "plugins/meshbooleanplugin")
-  SET(Mesh_Boolean_INSTALL_TESTS  "."                        )
+  #SET(Mesh_Boolean_INSTALL_TESTS  ".")
   SET(Mesh_Boolean_INSTALL_MISC   "misc"                     )
   SET(Mesh_Boolean_INSTALL_DOC    "doc"                      )
   SALOME_INSTALL_SCRIPTS("${_plugin_SCRIPTS}" "${Mesh_Boolean_INSTALL_PLUGIN}")
@@ -116,6 +117,7 @@ ELSE ()
 
   # Install the files
   INSTALL(FILES "${PROJECT_SOURCE_DIR}/README.md" DESTINATION "${Mesh_Boolean_INSTALL_DOC}" )
+  INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/tests" DESTINATION "${Mesh_Boolean_INSTALL_PLUGIN}" )
   SALOME_CONFIGURE_FILE(__init__.py __init__.py INSTALL "${Mesh_Boolean_INSTALL_PLUGIN}")
 
   # Install all engines scripts

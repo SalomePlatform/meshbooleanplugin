@@ -1,3 +1,5 @@
+from meshbooleanplugin.mesh_boolean_utils import execCommand, meshIOConvert
+
 def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
     import subprocess
     import os
@@ -24,20 +26,13 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
 
         command = [binary_path, mesh1_path, mesh2_path, operation, new_output_path]
         start_time = time.time()
-        with open(os.devnull, 'w') as null_file:
-            subprocess.check_call(command, stdout=null_file, stderr=null_file)
+        execCommand(command)
         end_time = time.time()
 
     except Exception as e:
         raise
 
-    # The following is  a method to use meshio without SALOME crashing
-    command = ['python3', '-c', f'import meshio; m = meshio.read("{new_output_path}"); m.write("{output_path}")']
-    with open(os.devnull, 'w') as null_file:
-      try:
-        subprocess.check_call(command, stdout=null_file, stderr=null_file)
-      except Exception as e:
-        raise
+    meshIOConvert(new_output_path, output_path)
     return end_time - start_time
 
 def mcut_main(operation, fn1, fn2, out_name):

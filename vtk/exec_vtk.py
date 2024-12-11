@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import signal
 import sys
+from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
 
 # noinspection PyUnresolvedReferences
-import vtkmodules.vtkInteractionStyle
 # noinspection PyUnresolvedReferences
-from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersCore import (
   vtkCleanPolyData,
   vtkTriangleFilter
@@ -21,6 +20,7 @@ from vtkmodules.vtkIOPLY import vtkPLYReader
 from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
 
 def ReadPolyData(file_name):
+  print("Reading", file_name)
   import os
   path, extension = os.path.splitext(file_name)
   extension = extension.lower()
@@ -31,11 +31,13 @@ def ReadPolyData(file_name):
   return poly_data
 
 def WriteSTLMesh(mesh, output_file):
+  print("Writing", output_file)
   try:
     writer = vtkSTLWriter()
     writer.SetFileName(output_file)
     writer.SetInputData(mesh)
     writer.Write()
+    print("WriteSTLMesh: ", output_file, "...done")
   except Exception:
       raise
 
@@ -48,7 +50,6 @@ def boolean_operation(operation, fn1, fn2, out_name):
   import subprocess
   import os
   signal.signal(signal.SIGSEGV, handler_sigsev)
-  colors = vtkNamedColors()
   start_time = time.time()
 
   # Read the input meshes
@@ -62,6 +63,10 @@ def boolean_operation(operation, fn1, fn2, out_name):
   clean1.Update()
   input1 = clean1.GetOutput()
 
+  nb_points1 = input1.GetNumberOfPoints()
+  print("Number of points input1: ",  nb_points1)
+  print("   Input1 bounds: {}".format(input1.GetBounds()))
+
   poly2 = ReadPolyData(fn2)
   if poly2 is None:
     raise IOError(f"Failed to read file: {fn2}")
@@ -72,6 +77,10 @@ def boolean_operation(operation, fn1, fn2, out_name):
   clean2.SetInputConnection(tri2.GetOutputPort())
   clean2.Update()
   input2 = clean2.GetOutput()
+
+  nb_points2 = input2.GetNumberOfPoints()
+  print("Number of points input2: ",  nb_points2)
+  print("   Input2 bounds: {}".format(input2.GetBounds()))
 
   # Read the operation
   booleanFilter = vtkBooleanOperationPolyDataFilter()
@@ -92,14 +101,21 @@ def boolean_operation(operation, fn1, fn2, out_name):
   except:
     raise RuntimeError
 
+  nb_points = result_mesh.GetNumberOfPoints()
+  print("Number of points output: ",  nb_points)
+  print("   Ouput bounds: {}".format(result_mesh.GetBounds()))
+  if nb_points == 0:
+    raise RuntimeError(f"{operation} failed. No points in the computed mesh.")
+
   new_out_name = out_name[:-3] + "stl"
   try:
     WriteSTLMesh(result_mesh, new_out_name)
   except:
-      raise IOError("Could not write the result in the STL file")
+    raise IOError("Could not write the result in the STL file")
   end_time = time.time()
   if not os.path.exists(new_out_name):
-      raise RuntimeError("Result has not been written correctly, an error occured during the boolean operation.")
+    raise RuntimeError("Result has not been written correctly, an error occured during the boolean operation.")
+
   with open(new_out_name, 'r+') as file:
     content = file.read()
     modified_content = content.replace(',', '.')
@@ -108,13 +124,7 @@ def boolean_operation(operation, fn1, fn2, out_name):
     file.write(modified_content)
     file.seek(0, 2)
 
-  # The following is a method to use meshio without SALOME crashing
-  command = ['python3', '-c', f'import meshio; m = meshio.read("{new_out_name}"); m.write("{out_name}")']
-  with open(os.devnull, 'w') as null_file:
-    try:
-      subprocess.check_call(command, stdout=null_file, stderr=null_file)
-    except Exception as e:
-      raise
+  meshIOConvert(new_out_name, out_name)
   return end_time - start_time
 
 def VTK_main(operation, fn1, fn2, fnout):
