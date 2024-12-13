@@ -170,7 +170,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
     self.COB_Operator.setCurrentIndex(1) # Needed to trigger the graph update
     self.COB_Operator.setCurrentIndex(0) # Needed to trigger the graph update
-    self.algorithmsLabels = []
     self.resize(800, 600)
 
     self.maFenetre = None
@@ -215,7 +214,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       right_name = os.path.splitext(os.path.basename(str(self.LE_MeshFile_R.text())))[0]
 
     engine = self.getCurrentAlgorithm().value
-    if engine == BolleanMeshAlgorithm.IRMB.value:
+    if engine == BooleanMeshAlgorithm.IRMB.value:
       engine = "IRMB" # prettier display
 
     self.label_summup.setText(_translate("MyPlugDialog", f"({engine}) : {left_name} {symbol} {right_name}"))
