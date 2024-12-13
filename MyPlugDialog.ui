@@ -143,36 +143,6 @@
              <height>35</height>
             </size>
            </property>
-           <item>
-            <property name="text">
-             <string>CGAL</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>igl</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>vtk</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>irmb</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Cork</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>mcut</string>
-            </property>
-           </item>
           </widget>
          </item>
          <item row="1" column="0">
