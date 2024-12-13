@@ -33,70 +33,92 @@ from meshbooleanplugin.mcut.exec_mcut import mcut_main
 from meshbooleanplugin.libigl.exec_libigl import libigl_main
 from meshbooleanplugin.cgal.exec_cgal import cgal_main
 from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
+import platform
+from enum import Enum
+
+class BooleanMeshAlgorithm(str, Enum):
+    CGAL = 'CGAL'
+    IGL  = 'igl'
+    VTK  = 'vtk'
+    IRMB = 'irmb'
+    CORK = 'cork'
+    MCUT = 'mcut'
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
-ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'vtk' : 2, \
-        'irmb' : 3, 'cork' : 4, 'mcut' : 5}
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
 
-ENGINE_BENCHMARK_DICT = {\
-        'CGAL is  is a C++ library that aims to provide easy access to efficient and reliable algorithms in computational geometry. It is known to provide robust algorithms.' : 0,\
-        'igl is a C++ geometry processing library.' : 1,\
-        """VTK is a software for 3D visualization and can be used to perform Boolean operations.
-Our benchmark reveals that VTK is particularly slow, and this computational cost doesn't come with  a quality superior to the other engines.""" : 2,\
-        'IRMB Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust. However, the output mesh might contains double elements or free elements. In addition, this code can fail to understand the orientation of a mesh, which leads to an inverted inside/out determination.' : 3, \
-        """Cork is designed to support Boolean operations between triangle meshes.
-Note that the development of this tool has stopped in 2013, and there are a lot of known issues.""" : 4,\
-        """mcut is a C++ code that performs Booleans on meshes 'at fine scale'. It actually works with libigl.
+ENGINE_BENCHMARK_DICT={BooleanMeshAlgorithm.CGAL : """CGAL is  is a C++ library that aims to provide easy access to efficient and reliable algorithms in computational geometry.
+It is known to provide robust algorithms.""",
+                       BooleanMeshAlgorithm.IGL  : """IGL is a C++ geometry processing library.""",
+                       BooleanMeshAlgorithm.VTK  : """VTK is a software for 3D visualization and can be used to perform Boolean operations.
+Our benchmark reveals that VTK is particularly slow, and this computational cost doesn't come with  a quality superior to the other engines.""",
+                       BooleanMeshAlgorithm.IRMB : """IRMB Interactive and Robust Mesh Booleans is the fastest of these engines. It is also very robust.
+However, the output mesh might contains double elements or free elements.
+In addition, this code can fail to understand the orientation of a mesh, which leads to an inverted inside/out determination.""",
+                       BooleanMeshAlgorithm.CORK : """Cork is designed to support Boolean operations between triangle meshes.
+Note that the development of this tool has stopped in 2013, and there are a lot of known issues.""",
+                       BooleanMeshAlgorithm.MCUT : """MCut is a C++ code that performs Booleans on meshes 'at fine scale'. It actually works with libigl.
 It is widely used in the animation industry and in universities.
-This code is not robust and fails on most edge cases of out benchmark.""" : 5}
+This code is not robust and fails on most edge cases of out benchmark."""
+                       }
 
-LICENSE_DICT = { 0 : 'GPL and LGPL', 1 : 'MPL2', 2 : 'BSD-3', 3 : 'MIT', 4 : 'LGPL', 5 : 'GPL and commercial'}
+LICENSE_DICT = { BooleanMeshAlgorithm.CGAL : 'GPL and LGPL',
+                 BooleanMeshAlgorithm.IGL  : 'MPL2',
+                 BooleanMeshAlgorithm.VTK  : 'BSD-3',
+                 BooleanMeshAlgorithm.IRMB : 'MIT',
+                 BooleanMeshAlgorithm.CORK : 'LGPL',
+                 BooleanMeshAlgorithm.MCUT : 'GPL and commercial'
+                }
 
 NB_TRIANGLES = [972, 1940, 6958, 27320, 110324, 441496, 1765412]
-UNION_TIME_DATA = [[0.1458, 0.2223, 0.5972, 1.8644, 7.4354, 33.7484, 190.1539], # CGAL
-                    [0.1666, 0.2293, 0.247, 0.6063, 1.8354, 6.8085, 33.9464], # igl
-                    [0.4118, 0.6189, 1.5142, 3.673, 11.3241, 52.2387], # VTK
-                    [0.0208, 0.0254, 0.0603, 0.1648, 0.5673, 2.027, 8.3993], # IRMB
-                    [0.0123, 0.0175, 0.0426, 0.1453, 0.6951, 3.4952, 20.1791], # Cork
-                    [0.0279, 0.0413, 0.1113, 0.3806, 1.5812, 7.6355, 31.6626]] # mcut
+UNION_TIME_DATA = { BooleanMeshAlgorithm.CGAL : [0.1458, 0.2223, 0.5972, 1.8644, 7.4354, 33.7484, 190.1539],
+                    BooleanMeshAlgorithm.IGL  : [0.1666, 0.2293, 0.247, 0.6063, 1.8354, 6.8085, 33.9464],
+                    BooleanMeshAlgorithm.VTK  : [0.4118, 0.6189, 1.5142, 3.673, 11.3241, 52.2387],
+                    BooleanMeshAlgorithm.IRMB : [0.0208, 0.0254, 0.0603, 0.1648, 0.5673, 2.027, 8.3993],
+                    BooleanMeshAlgorithm.CORK : [0.0123, 0.0175, 0.0426, 0.1453, 0.6951, 3.4952, 20.1791],
+                    BooleanMeshAlgorithm.MCUT : [0.0279, 0.0413, 0.1113, 0.3806, 1.5812, 7.6355, 31.6626]
+                   }
 
-INTERSECTION_TIME_DATA = [[0.1449, 0.2258, 0.5775, 1.8496, 7.2567, 33.5945, 190.2884], # CGAL
-                    [0.1679, 0.2297, 0.2484, 0.6054, 1.8241, 6.4457, 36.9528], # igl
-                    [0.4118, 0.6183, 1.5209, 3.6708, 10.9282, 55.9625], # VTK
-                    [0.0201, 0.0247, 0.0582, 0.1572, 0.5295, 1.9357, 10.5941], # IRMB
-                    [0.0119, 0.0168, 0.0408, 0.1391, 0.6435, 3.4335, 20.2468], # Cork
-                    [0.0284, 0.0415, 0.1099, 0.3869, 1.6174, 7.7535, 35.3653]] # mcut
+INTERSECTION_TIME_DATA = { BooleanMeshAlgorithm.CGAL : [0.1449, 0.2258, 0.5775, 1.8496, 7.2567, 33.5945, 190.2884],
+                           BooleanMeshAlgorithm.IGL  : [0.1679, 0.2297, 0.2484, 0.6054, 1.8241, 6.4457, 36.9528],
+                           BooleanMeshAlgorithm.VTK  : [0.4118, 0.6183, 1.5209, 3.6708, 10.9282, 55.9625],
+                           BooleanMeshAlgorithm.IRMB : [0.0201, 0.0247, 0.0582, 0.1572, 0.5295, 1.9357, 10.5941],
+                           BooleanMeshAlgorithm.CORK : [0.0119, 0.0168, 0.0408, 0.1391, 0.6435, 3.4335, 20.2468],
+                           BooleanMeshAlgorithm.MCUT  : [0.0284, 0.0415, 0.1099, 0.3869, 1.6174, 7.7535, 35.3653]
+                          }
 
-DIFFERENCE_TIME_DATA = [[0.1456, 0.2274, 0.6068, 1.8707, 7.3269, 33.8812, 204.5565], # CGAL
-                    [0.1664, 0.2340, 0.2481, 0.6075, 1.8530, 6.6530, 38.7202], # igl
-                    [0.4129, 0.6228, 1.5269, 3.7990, 10.9499, 56.4498], # VTK
-                    [0.0207, 0.0264, 0.0592, 0.1674, 0.5472, 2.5907, 11.4418], # IRMB
-                    [0.0120, 0.0174, 0.0441, 0.1533, 0.6761, 3.5862, 21.3695], # Cork
-                    [0.0206, 0.0328, 0.0907, 0.3942, 1.5381, 7.6089, 34.9195]] # mcut
+DIFFERENCE_TIME_DATA = { BooleanMeshAlgorithm.CGAL : [0.1456, 0.2274, 0.6068, 1.8707, 7.3269, 33.8812, 204.5565],
+                         BooleanMeshAlgorithm.IGL  : [0.1664, 0.2340, 0.2481, 0.6075, 1.8530, 6.6530, 38.7202],
+                         BooleanMeshAlgorithm.VTK  : [0.4129, 0.6228, 1.5269, 3.7990, 10.9499, 56.4498],
+                         BooleanMeshAlgorithm.IRMB : [0.0207, 0.0264, 0.0592, 0.1674, 0.5472, 2.5907, 11.4418],
+                         BooleanMeshAlgorithm.CORK : [0.0120, 0.0174, 0.0441, 0.1533, 0.6761, 3.5862, 21.3695],
+                         BooleanMeshAlgorithm.MCUT : [0.0206, 0.0328, 0.0907, 0.3942, 1.5381, 7.6089, 34.9195]
+                        }
 
 
-UNION_AVG_QUALITY_DATA = [[0.6390, 0.6744, 0.7384, 0.8186, 0.8761, 0.9114, 0.9309],
-                        [0.6315, 0.6734, 0.7331, 0.8154, 0.8742, 0.9103, 0.9303],
-                        [0.6065, 0.6474, 0.7227, 0.8101, 0.8707, 0.9084],
-                        [0.5958, 0.6503, 0.7237, 0.8077, 0.8698, 0.9086, 0.9278],
-                        [0.6387, 0.6741, 0.7382, 0.8184, 0.8760, 0.9113, 0.9308],
-                        [0.6357, 0.6714, 0.7360, 0.8174, 0.8753, 0.9108, 0.9306]]
+UNION_AVG_QUALITY_DATA = { BooleanMeshAlgorithm.CGAL : [0.6390, 0.6744, 0.7384, 0.8186, 0.8761, 0.9114, 0.9309],
+                           BooleanMeshAlgorithm.IGL  : [0.6315, 0.6734, 0.7331, 0.8154, 0.8742, 0.9103, 0.9303],
+                           BooleanMeshAlgorithm.VTK  : [0.6065, 0.6474, 0.7227, 0.8101, 0.8707, 0.9084],
+                           BooleanMeshAlgorithm.IRMB : [0.5958, 0.6503, 0.7237, 0.8077, 0.8698, 0.9086, 0.9278],
+                           BooleanMeshAlgorithm.CORK : [0.6387, 0.6741, 0.7382, 0.8184, 0.8760, 0.9113, 0.9308],
+                           BooleanMeshAlgorithm.MCUT : [0.6357, 0.6714, 0.7360, 0.8174, 0.8753, 0.9108, 0.9306]
+                          }
 
-INTERSECTION_AVG_QUALITY_DATA = [[0.5895, 0.6424, 0.6993, 0.7928, 0.8592, 0.9030, 0.9266],
-                        [0.5838, 0.6395, 0.6910, 0.7871, 0.8562, 0.9013, 0.9258],
-                        [0.5489, 0.5937, 0.6601, 0.7688, 0.8455, 0.8954],
-                        [0.6261, 0.6769, 0.6831, 0.7874, 0.8550, 0.8996, 0.9356],
-                        [0.5890, 0.6417, 0.6989, 0.7926, 0.8590, 0.9029, 0.9265],
-                        [0.5799, 0.6374, 0.6954, 0.7913, 0.8581, 0.9023, 0.9263]]
+INTERSECTION_AVG_QUALITY_DATA = { BooleanMeshAlgorithm.CGAL : [0.5895, 0.6424, 0.6993, 0.7928, 0.8592, 0.9030, 0.9266],
+                                  BooleanMeshAlgorithm.IGL  : [0.5838, 0.6395, 0.6910, 0.7871, 0.8562, 0.9013, 0.9258],
+                                  BooleanMeshAlgorithm.VTK  : [0.5489, 0.5937, 0.6601, 0.7688, 0.8455, 0.8954],
+                                  BooleanMeshAlgorithm.IRMB : [0.6261, 0.6769, 0.6831, 0.7874, 0.8550, 0.8996, 0.9356],
+                                  BooleanMeshAlgorithm.CORK : [0.5890, 0.6417, 0.6989, 0.7926, 0.8590, 0.9029, 0.9265],
+                                  BooleanMeshAlgorithm.MCUT : [0.5799, 0.6374, 0.6954, 0.7913, 0.8581, 0.9023, 0.9263]
+                                 }
 
-DIFFERENCE_AVG_QUALITY_DATA = [[0.6344, 0.7006, 0.7648, 0.8376, 0.8886, 0.9192, 0.9350],
-                        [0.6284, 0.6982, 0.7588, 0.8335, 0.8866, 0.9180, 0.9345],
-                        [0.5983, 0.6605, 0.7347, 0.8207, 0.8793, 0.9142],
-                        [0.5958, 0.6503, 0.7237, 0.7999, 0.8698, 0.9054, 0.9278],
-                        [0.6341, 0.7003, 0.7646, 0.8375, 0.8885, 0.9191, 0.9350],
-                        [0.6318, 0.6878, 0.7676, 0.8374, 0.8907, 0.9164, 0.9360]]
-
+DIFFERENCE_AVG_QUALITY_DATA = { BooleanMeshAlgorithm.CGAL : [0.6344, 0.7006, 0.7648, 0.8376, 0.8886, 0.9192, 0.9350],
+                                BooleanMeshAlgorithm.IGL  : [0.6284, 0.6982, 0.7588, 0.8335, 0.8866, 0.9180, 0.9345],
+                                BooleanMeshAlgorithm.VTK  : [0.5983, 0.6605, 0.7347, 0.8207, 0.8793, 0.9142],
+                                BooleanMeshAlgorithm.IRMB : [0.5958, 0.6503, 0.7237, 0.7999, 0.8698, 0.9054, 0.9278],
+                                BooleanMeshAlgorithm.CORK : [0.6341, 0.7003, 0.7646, 0.8375, 0.8885, 0.9191, 0.9350],
+                                BooleanMeshAlgorithm.MCUT : [0.6318, 0.6878, 0.7676, 0.8374, 0.8907, 0.9164, 0.9360]
+                               }
 
 def getTmpFileName(suffix=None, prefix=None):
   tempdir = tempfile.gettempdir()
@@ -148,9 +170,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
     self.COB_Operator.setCurrentIndex(1) # Needed to trigger the graph update
     self.COB_Operator.setCurrentIndex(0) # Needed to trigger the graph update
-    self.COB_Engine.setCurrentIndex(1) # Same for the benchmark label
-    self.COB_Engine.setCurrentIndex(0)
-
+    self.algorithmsLabels = []
     self.resize(800, 600)
 
     self.maFenetre = None
@@ -194,12 +214,8 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     if self.isFile_R:
       right_name = os.path.splitext(os.path.basename(str(self.LE_MeshFile_R.text())))[0]
 
-    engine = ""
-    for key, val in ENGINE_DICT.items():
-      if val == self.COB_Engine.currentIndex():
-        engine = key
-
-    if engine == "irmb":
+    engine = self.getCurrentAlgorithm().value
+    if engine == BolleanMeshAlgorithm.IRMB.value:
       engine = "IRMB" # prettier display
 
     self.label_summup.setText(_translate("MyPlugDialog", f"({engine}) : {left_name} {symbol} {right_name}"))
@@ -207,6 +223,15 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   def error_popup(self, title, e):
     QMessageBox.critical(self, title, str(e))
     return False
+
+  def getCurrentAlgorithm(self):
+    for algo in BooleanMeshAlgorithm:
+      if algo.value == self.COB_Engine.currentText() :
+        return algo
+    if platform.system() == "Windows" :
+        return BooleanMeshAlgorithm.IGL
+    else:
+        return BooleanMeshAlgorithm.CGAL
 
   def GenObjFromMed(self, zone):
     """zone = L or R"""
@@ -242,7 +267,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   def update_graph(self):
     from PyQt5 import QtCore
     _translate = QtCore.QCoreApplication.translate
-    data = []
+    data = {}
     if self.COB_Metric.currentIndex() == METRICS_DICT['Execution Time']:
       data = DIFFERENCE_TIME_DATA
       if self.COB_Operator.currentIndex() == OPERATOR_DICT['Union']:
@@ -257,8 +282,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
         data = INTERSECTION_AVG_QUALITY_DATA
 
     curve = qwt.QwtPlotCurve("Benchmark curve")
-    curve.setData(NB_TRIANGLES, data[self.COB_Engine.currentIndex()],\
-            len(data[self.COB_Engine.currentIndex()]))
+    curve.setData(NB_TRIANGLES, data[self.getCurrentAlgorithm()], len(data[self.getCurrentAlgorithm()]))
     self.QP_Benchmark.detachItems()
     curve.attach(self.QP_Benchmark)
     self.QP_Benchmark.setAxisAutoScale(True)
@@ -272,10 +296,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     for key, val in OPERATOR_DICT.items():
       if val == self.COB_Operator.currentIndex():
         self.operator = key
-    engine = ''
-    for key, val in ENGINE_DICT.items():
-      if val == self.COB_Engine.currentIndex():
-        engine = key
+    engine = self.getCurrentAlgorithm().value
     self.label_Graph_Title.setText(_translate("MyPlugDialog", f"<-\nPerformences of {engine} on the {self.operator.lower()} operator, measuring the {metric.lower()}."))
 
     self.QP_Benchmark.replot()
@@ -292,14 +313,12 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   def DisplayEngineLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
-    self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.COB_Engine.currentIndex()]} license."))
-    for key, val in ENGINE_BENCHMARK_DICT.items():
-      if self.COB_Engine.currentIndex() == val:
-        self.label_Benchmark.setText(_translate("MyPlugDialog", key))
+    self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.getCurrentAlgorithm()]} license."))
+    self.label_Benchmark.setText(_translate("MyPlugDialog", ENGINE_BENCHMARK_DICT[self.getCurrentAlgorithm()]))
     self.update_graph()
 
   def PBHelpPressed(self):
-    QMessageBox.about(None, "About this boolean mesh operation tool",
+    QMessageBox.about(self, "About this boolean mesh operation tool",
             """
 This tool allows you to apply boolean
 operators to your meshes. You can fill
@@ -356,18 +375,20 @@ that you selected.
     result_file = getTmpFileName(suffix=".med",prefix="ForBMC_")
 
     try:
-      if (self.COB_Engine.currentIndex() == ENGINE_DICT['vtk']):
+      if self.getCurrentAlgorithm() == BooleanMeshAlgorithm.VTK :
         VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['irmb']):
+      elif self.getCurrentAlgorithm()  == BooleanMeshAlgorithm.IRMB :
         IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['cork']):
+      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.CORK :
         cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['mcut']):
+      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.MCUT :
         mcut_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['igl']):
+      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.IGL :
         libigl_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif (self.COB_Engine.currentIndex() == ENGINE_DICT['CGAL']):
+      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.CGAL :
         cgal_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
+      else:
+        raise ValueError("Unknown algorithm!")
     except Exception as e:
         self.restore_cursor()
         return self.error_popup("Error while performing the boolean", e)
@@ -399,7 +420,7 @@ that you selected.
 
     if salome.sg.hasDesktop():
       salome.sg.updateObjBrowser()
-      computing_box = QMessageBox.about(None, "Compute","Computation successfully finished")
+      computing_box = QMessageBox.about(self, "Compute","Computation successfully finished")
     else:
       print("Computation successfully finished")
     self.restore_cursor()
@@ -526,6 +547,7 @@ that you selected.
     return
 
 __dialog=None
+
 def getDialog():
   """
   This function returns a singleton instance of the plugin dialog.
