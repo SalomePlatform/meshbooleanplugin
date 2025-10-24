@@ -29,11 +29,11 @@ result_dict = {}
 SAMPLES_PATH = os.path.join(ROOT_PATH, 'samples')
 
 
-DEFAULT_ENGINE = ['cgal', 'vtk']
+DEFAULT_ENGINE = ['CGAL', 'vtk']
 DEFAULT_OPERATION = ['union']
 
 OPERATOR_DICT = { 'union' : 0, 'intersection' : 1, 'difference' : 2 }
-ENGINE_DICT = { 'cgal' : 0, 'igl' : 1, 'vtk' : 2, 'irmb' : 3, 'cork' : 4, 'mcut' : 5}
+ENGINE_DICT = { 'CGAL' : 0, 'igl' : 1, 'vtk' : 2, 'irmb' : 3, 'cork' : 4, 'mcut' : 5}
 BOLD = '\033[1m'
 RESET = '\033[0m'
 
@@ -94,11 +94,17 @@ def check_ok(test, test_number):
     dialog.LE_MeshSmesh_R.setText("")
     dialog.__selectedMesh_R=None
     ###
-
     # Set all the parameter to be conform with the yaml
     ###
+
     dialog.COB_Operator.setCurrentIndex(OPERATOR_DICT[test.op])
-    dialog.COB_Engine.setCurrentIndex(ENGINE_DICT[test.engine])
+    # the engine item list is populated at the dialog box startup, we have to explicitely add an item
+    # otherwise, there is no item and the default engine is always selected
+    # => add the tested engine in the QComboBox
+    dialog.COB_Engine.addItem(test.engine)
+    # set to the last added item
+    # note that, as there was no item before, we could set the current index to 0
+    dialog.COB_Engine.setCurrentIndex(dialog.COB_Engine.count()-1)
 
     # Compute Mesh
     ###
