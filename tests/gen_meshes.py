@@ -5,11 +5,10 @@
 ###
 
 import sys
-import salome
+from salome.kernel import salome
 
 salome.salome_init()
-import salome_notebook
-notebook = salome_notebook.NoteBook()
+
 import os
 sys.path.insert(0, f'{os.path.join(os.environ["PWD"], "samples")}')
 
@@ -53,7 +52,7 @@ Translation_1_1, = SHAPERSTUDY.shape(model.featureStringId(Translation_1))
 ### SMESH component
 ###
 
-import  SMESH, SALOMEDS
+from salome.kernel import SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
 smesh = smeshBuilder.New()
