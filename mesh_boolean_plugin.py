@@ -49,6 +49,9 @@ def MeshBoolean(context):
       items.append('mcut')
   #
   window = mesh_boolean_dialog.getDialog()
+
+  #clear the engine before refilling it each time we click on mesh boolean operations
+  window.COB_Engine.clear()
   for item in items:
     window.COB_Engine.addItem(item)
   window.show()

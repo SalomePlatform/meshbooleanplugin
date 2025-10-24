@@ -25,16 +25,26 @@ import sys
 from meshbooleanplugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from qtsalome import *
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
+from PyQt5.QtWidgets import QMessageBox
 import qwt
-from meshbooleanplugin.vtk.exec_vtk import VTK_main
-from meshbooleanplugin.irmb.exec_irmb import IRMB_main
-from meshbooleanplugin.cork.exec_cork import cork_main
-from meshbooleanplugin.mcut.exec_mcut import mcut_main
-from meshbooleanplugin.libigl.exec_libigl import libigl_main
-from meshbooleanplugin.cgal.exec_cgal import cgal_main
+
+from meshbooleanplugin.vtk import exec_vtk
+from meshbooleanplugin.irmb import exec_irmb
+from meshbooleanplugin.cork import exec_cork
+from meshbooleanplugin.mcut import exec_mcut
+from meshbooleanplugin.libigl import exec_libigl
+from meshbooleanplugin.cgal import exec_cgal
+
 from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
 import platform
 from enum import Enum
+import time
+import SalomePyQt
+sgPyQt=SalomePyQt.SalomePyQt()
+
+translate=QCoreApplication.translate
+
 
 class BooleanMeshAlgorithm(str, Enum):
     CGAL = 'CGAL'
@@ -126,6 +136,75 @@ def getTmpFileName(suffix=None, prefix=None):
   tmp_filename = tmp_file.name
   return tmp_filename
 
+
+def runAlgo(algo, operator, mesh_left, mesh_right, result_file):
+  print("in runAlgo")
+  if algo == BooleanMeshAlgorithm.VTK :
+    p = exec_vtk.VTK_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.IRMB :
+    p = exec_irmb.IRMB_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.CORK :
+    p = exec_cork.cork_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.MCUT :
+    p = exec_mcut.mcut_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.IGL :
+    p = exec_libigl.libigl_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.CGAL :
+    p = exec_cgal.cgal_main(operator, mesh_left, mesh_right, result_file)
+  else:
+    raise ValueError("Unknown algorithm!")
+  return p
+
+#Worker class for Qthread
+class Worker(QObject):
+  finished = pyqtSignal(str)
+  error = pyqtSignal(str)
+
+  def __init__(self, algo, operator, mesh_left, mesh_right, result_file):
+    super(Worker, self).__init__()
+    self.algo=algo
+    self.operator= operator
+    self.mesh_right= mesh_right
+    self.mesh_left= mesh_left
+    self.result_file= result_file
+    self.output_file= None
+    self._isRunning= True
+    self.process = None
+    self.returncode = None
+
+  def task(self):
+    print("start worker.task")
+    try:
+      print("try worker.task")
+      if not self._isRunning:
+        return
+      print("before runAlgo")
+      self.process = runAlgo(self.algo, self.operator, self.mesh_left, self.mesh_right, self.result_file)
+      print("in worker.task, self.process:", self.process)
+      #check if there is a process to call wait
+      if self.process is not None:
+        #wait called to wait the end of the process
+        print("before wait")
+        self.returncode = self.process.wait()
+        print("after wait")
+      if self._isRunning:
+        self.finished.emit(self.result_file)
+    except Exception as e:
+      self.error.emit(str(e))
+
+  #stop method to kill the process with the cancel button
+  def stop(self):
+    print("in worker.stop()")
+    self._isRunning= False
+    if self.process is not None:
+      print("self.process is not None => Killing process")
+      try:
+        self.process.kill()
+        print("Process killed")
+      except Exception as e:
+        print("Error killing process:", e)
+    print("worker.stop() end")
+
 class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   """
   """
@@ -133,6 +212,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     from PyQt5 import QtCore
     QWidget.__init__(self)
     self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+    self.worker = None
     self.setupUi(self)
     self.connecterSignaux()
     self.commande=""
@@ -174,10 +254,14 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
     self.maFenetre = None
 
+    self.computing = False
+    self.result_file = None
+
   def connecterSignaux(self) :
+    self.PB_Close.clicked.connect(self.PBClosePressed)
     self.PB_Cancel.clicked.connect(self.PBCancelPressed)
     self.PB_Help.clicked.connect(self.PBHelpPressed)
-    self.PB_OK.clicked.connect(self.PBOKPressed)
+    self.PB_Compute.clicked.connect(self.PBComputePressed)
 
     self.LE_MeshFile_L.returnPressed.connect(lambda : self.meshFileNameChanged("L"))
     self.LE_MeshSmesh_L.returnPressed.connect(lambda : self.meshSmeshNameChanged("L"))
@@ -342,12 +426,60 @@ that you selected.
   def restore_cursor(self):
     QApplication.restoreOverrideCursor()
     self.repaint()
+    sgPyQt.processEvents()
 
-  def PBOKPressed(self):
+# on_compute_finished fonction called with signals afterwards
+  def on_compute_finished(self):
+    print("Computation finished")
+    self.loadResult()
+    self.computing= False
+    self.update_button()
+    self.restore_cursor()
+
+# update_button fonction to enable the 'Cancel' button and disable the 'Compute' one (and vice-versa)
+  def update_button(self):
+    if self.computing:
+      self.PB_Compute.setEnabled(False)
+      self.PB_Cancel.setEnabled(True)
+    else:
+      self.PB_Compute.setEnabled(True)
+      self.PB_Cancel.setEnabled(False)
+    #Forcing the change to happen in SALOME
+    sgPyQt.processEvents()
+
+
+  def PBCancelPressed(self):
     from salome.kernel import salome
+    print("Cancel called by user")
+  # check that there is a process then stop it if there is
+    if self.worker is not None:
+      print("Process stopped")
+      self.worker.stop()
+      try:
+        self.thread.quit()
+        self.thread.wait()
+      except Exception as e:
+        print(e)
+        pass
+    self.computing=False
+    self.update_button()
+
+    if salome.sg.hasDesktop():
+      salome.sg.updateObjBrowser()
+      self.restore_cursor()
+      computing_box = QMessageBox.about(self, "Compute","Computation canceled by user")
+    else:
+      print("Computation canceled by user")
+
+  def PBComputePressed(self):
+    from salome.kernel import salome
+    print("Compute  called by user")
+
     from salome.kernel import SMESH
-    from salome.kernel.salome.kernel import studyedit
+    from salome.kernel import studyedit
     from salome.smesh import smeshBuilder
+
+
     if self.meshIn_R=="" or self.meshIn_L=="":
       return self.error_popup("Mesh", "select an input mesh")
 
@@ -371,31 +503,56 @@ that you selected.
       self.restore_cursor()
       return self.error_popup("File", "unable to read mesh in "+str(self.meshIn_R))
 
-    result_file = getTmpFileName(suffix=".med",prefix="ForBMC_")
+    self.result_file = getTmpFileName(suffix=".med",prefix="ForBMC_")
 
-    try:
-      if self.getCurrentAlgorithm() == BooleanMeshAlgorithm.VTK :
-        VTK_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif self.getCurrentAlgorithm()  == BooleanMeshAlgorithm.IRMB :
-        IRMB_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.CORK :
-        cork_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.MCUT :
-        mcut_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.IGL :
-        libigl_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      elif self.getCurrentAlgorithm() == BooleanMeshAlgorithm.CGAL :
-        cgal_main(self.operator.lower(), self.meshIn_L, self.meshIn_R, result_file)
-      else:
-        raise ValueError("Unknown algorithm!")
-    except Exception as e:
-        self.restore_cursor()
-        return self.error_popup("Error while performing the boolean", e)
+    self.thread = QThread()
+    self.worker = Worker(self.getCurrentAlgorithm(),self.operator.lower(),self.meshIn_L, self.meshIn_R, self.result_file)
+
+    self.worker.moveToThread(self.thread)
+
+    self.thread.started.connect(self.worker.task)
+    self.worker.finished.connect(self.on_compute_finished)
+    self.worker.finished.connect(self.worker.deleteLater)
+    self.worker.finished.connect(self.thread.quit)
+    self.thread.finished.connect(self.thread.deleteLater)
+    self.worker.error.connect(lambda e: self.error_popup("Computation error", e))
+#   start the thread(the computation)
+    self.thread.start()
+
+    self.computing=True
+#   unlock the cancel button
+    self.update_button()
+
+  def loadResult(self):
+    import salome
+    from salome.smesh import smeshBuilder
+
+    print("return code: ", self.worker.returncode)
+    if (self.worker.returncode) != 0:
+      self.restore_cursor()
+      self.error_popup("Error", "Computation ended in error.")
+      return
+
+    #see which algorithm is called to convert the appropriate result into a .med file
+    algo = self.getCurrentAlgorithm()
+    if algo == BooleanMeshAlgorithm.CGAL:
+      exec_cgal.convert_result(self.result_file)
+    elif algo == BooleanMeshAlgorithm.MCUT:
+      exec_mcut.convert_result(self.result_file)
+    elif algo == BooleanMeshAlgorithm.CORK:
+      exec_cork.convert_result(self.result_file)
+    elif algo == BooleanMeshAlgorithm.IRMB:
+      exec_irmb.convert_result(self.result_file)
+    elif algo == BooleanMeshAlgorithm.IGL:
+      exec_libigl.convert_result(self.result_file)
+    elif algo == BooleanMeshAlgorithm.VTK:
+      exec_vtk.convert_result(self.result_file)
 
     smesh = smeshBuilder.New()
     smesh.UpdateStudy()
+
     try:
-      (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
+      (outputMesh, status) = smesh.CreateMeshesFromMED(self.result_file)
     except Exception as e:
       self.restore_cursor()
       return self.error_popup("Result import", e)
@@ -418,14 +575,14 @@ that you selected.
 
     if salome.sg.hasDesktop():
       salome.sg.updateObjBrowser()
+      self.restore_cursor()
       computing_box = QMessageBox.about(self, "Compute","Computation successfully finished")
     else:
       print("Computation successfully finished")
-    self.restore_cursor()
 
     return True
 
-  def PBCancelPressed(self):
+  def PBClosePressed(self):
     self.close()
 
   def PBMeshFilePressed(self, zone):
