@@ -344,9 +344,9 @@ that you selected.
     self.repaint()
 
   def PBOKPressed(self):
-    import salome
-    import SMESH
-    from salome.kernel import studyedit
+    from salome.kernel import salome
+    from salome.kernel import SMESH
+    from salome.kernel.salome.kernel import studyedit
     from salome.smesh import smeshBuilder
     if self.meshIn_R=="" or self.meshIn_L=="":
       return self.error_popup("Mesh", "select an input mesh")
@@ -393,7 +393,6 @@ that you selected.
         return self.error_popup("Error while performing the boolean", e)
 
     smesh = smeshBuilder.New()
-    maStudy=salome.myStudy
     smesh.UpdateStudy()
     try:
       (outputMesh, status) = smesh.CreateMeshesFromMED(result_file)
@@ -460,8 +459,8 @@ that you selected.
   def PBMeshSmeshPressed(self, zone):
     """zone = L or R"""
     from omniORB import CORBA
-    import salome
-    from salome.kernel import studyedit
+    from salome.kernel import salome
+    from salome.kernel.salome.kernel import studyedit
     from salome.smesh.smeshstudytools import SMeshStudyTools
     from salome.gui import helper as guihelper
     from salome.smesh import smeshBuilder
