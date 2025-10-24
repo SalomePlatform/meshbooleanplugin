@@ -39,15 +39,16 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
       binary_path = os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin", "cork", "cork_bin")
   try:
     command = [binary_path, operation, new_mesh1_path, new_mesh2_path, new_output_path]
-    start_time = time.time()
-    execCommand(command)
-    end_time = time.time()
+    p = execCommand(command)
   except Exception as e:
     raise
+  return p
 
-  # The following is  a method to use meshio without SALOME crashing
-  meshIOConvert(new_output_path, output_path)
-  return end_time - start_time
+#same convert_result fonction used for every algorithm
+def convert_result(med_path):
+  output_path = med_path[:-3] + 'off'
+  meshIOConvert(output_path, med_path)
 
 def cork_main(operation, fn1, fn2, out_name):
-  return perform_boolean_operation(fn1, fn2, operation, out_name)
+  p = perform_boolean_operation(fn1, fn2, operation, out_name)
+  return p

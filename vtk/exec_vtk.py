@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import signal
 import sys
 from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
+import os
+import time
 
 # noinspection PyUnresolvedReferences
 # noinspection PyUnresolvedReferences
@@ -21,7 +22,6 @@ from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
 
 def ReadPolyData(file_name):
   print("Reading", file_name)
-  import os
   path, extension = os.path.splitext(file_name)
   extension = extension.lower()
   reader = vtkOBJReader()
@@ -41,15 +41,7 @@ def WriteSTLMesh(mesh, output_file):
   except Exception:
       raise
 
-def handler_sigsev(signum, frame):
-  sys.exit(1)
-
 def boolean_operation(operation, fn1, fn2, out_name):
-  import time
-  import meshio
-  import subprocess
-  import os
-  signal.signal(signal.SIGSEGV, handler_sigsev)
   start_time = time.time()
 
   # Read the input meshes
@@ -124,8 +116,23 @@ def boolean_operation(operation, fn1, fn2, out_name):
     file.write(modified_content)
     file.seek(0, 2)
 
-  meshIOConvert(new_out_name, out_name)
   return end_time - start_time
 
+def convert_result(med_path):
+  output_path = med_path[:-3] + "stl"
+  meshIOConvert(output_path, med_path)
+  return med_path
+
+
 def VTK_main(operation, fn1, fn2, fnout):
-    return boolean_operation(operation, fn1, fn2, fnout)
+  from meshbooleanplugin.mesh_boolean_utils import execCommand
+
+  current_dir= os.path.dirname(os.path.abspath(__file__))
+  run_vtk_path = os.path.join(current_dir, "run_vtk.py")
+
+  new_output_path = os.path.splitext(fnout)[0] + ".stl"
+  command = ["python3", run_vtk_path, operation, fn1, fn2, new_output_path]
+  print("Running VTK command:", " ".join(command))
+
+  p = execCommand(command)
+  return p
