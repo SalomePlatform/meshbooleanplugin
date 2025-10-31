@@ -126,4 +126,6 @@ ELSE ()
     MESSAGE(status "hello ${PROJECT_SOURCE_DIR}/${Mesh_Boolean_Engine}/exec_${Mesh_Boolean_Engine}.py")
     INSTALL(FILES "${PROJECT_SOURCE_DIR}/${Mesh_Boolean_Engine}/exec_${Mesh_Boolean_Engine}.py" DESTINATION "${Mesh_Boolean_INSTALL_PLUGIN}/${Mesh_Boolean_Engine}" )
   ENDFOREACH()
+  #Copy additional script needed for the VTK engine
+  INSTALL(FILES "${PROJECT_SOURCE_DIR}/vtk/run_vtk.py" DESTINATION "${Mesh_Boolean_INSTALL_PLUGIN}/vtk")
 ENDIF()

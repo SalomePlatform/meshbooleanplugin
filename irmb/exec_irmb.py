@@ -20,14 +20,17 @@ def perform_boolean_operation(mesh1_path, mesh2_path, operation, output_path):
   command = [binary_path, operation, mesh1_path, mesh2_path, obj_output_path]
 
   try:
-    start_time = time.time()
-    execCommand(command)
-    end_time = time.time()
+    p = execCommand(command)
   except Exception as e:
     raise
+  return p
 
-  meshIOConvert(obj_output_path, output_path)
-  return end_time - start_time
+#same convert_result fonction used for every algorithm
+def convert_result(med_path):
+  output_path = med_path[:-3] + "obj"
+  meshIOConvert(output_path, med_path)
+
 
 def IRMB_main(operation, fn1, fn2, out_name):
-    return perform_boolean_operation(fn1, fn2, operation, out_name)
+  p = perform_boolean_operation(fn1, fn2, operation, out_name)
+  return p
