@@ -291,6 +291,8 @@ jobs:
           tk-dev                                \
           wget
         sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+
     - name: configure
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
@@ -304,37 +306,54 @@ jobs:
             https://files.salome-platform.org/Salome/Salome${SALOMVERSION}/${SALOMESRC}.tar.gz
         tar -xf ${SALOMESRC}.tar.gz
         mv   $SALOMESRC $SALOMELOCALINSTALL/.
-        mkdir -p $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        cp -r * $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh
-        echo "\n# mesh boolean plugin for SALOME\ntry:\n\tfrom meshbooleanplugin.mesh_boolean_plugin import MeshBoolean\n\tsalome_pluginsmanager.AddFunction('Boolean Mesh Operations', 'Perform boolean operations on meshes', MeshBoolean)\nexcept Exception as e:\n\tsalome_pluginsmanager.logger.info('ERROR: MeshBoolean plug-in is unavailable: {}'.format(e))\n\tpass" >> smesh_plugins.py
-    - name: make
+        cp -r *  $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/meshbooleanplugin/plugins/meshbooleanplugin
+
+
+    - name: Patch salome import untill SALOME 10 is released
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
-        cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        make all
-        mkdir -p build
-        cd build
-        cmake ..
-        make
-        cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
-        $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
-          pip install -r requirements.txt
-    - name: make check
-      run: |
-        export SALOMELOCALINSTALL=/home/runner/salome
-        cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests
-        $SALOMELOCALINSTALL/$SALOMESRC/salome -t gen_meshes.py
-        $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
-          export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH && \
-          export QT_QPA_PLATFORM=offscreen && \
-          echo "PYTHON PATH IS" && \
-          echo $PYTHONPATH && \
-          $SALOMELOCALINSTALL/$SALOMESRC/salome -t tests.py
-        less $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt
-        # Save the log file(s) as an artifact
-        mkdir -p $GITHUB_WORKSPACE/artifacts
-        mv ./*.log ./*.txt  $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt $GITHUB_WORKSPACE/artifacts/ || true
+        export SALOMVERSION=9.15.0
+        export SALOMEBUILDOS=UB24.04
+        export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+        sed -i 's/from salome\.kernel import salome/import salome/' \
+          $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/meshbooleanplugin/plugins/meshbooleanplugin/tests/gen_meshes.py
+        sed -i 's/from salome\.kernel import SMESH\, SALOMEDS/import SMESH\, SALOMEDS/' \
+          $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/meshbooleanplugin/plugins/meshbooleanplugin/tests/gen_meshes.py
+
+
+    # - name: make
+    #   run: |
+    #     export SALOMELOCALINSTALL=/home/runner/salome
+    #     export SALOMVERSION=9.15.0
+    #     export SALOMEBUILDOS=UB24.04
+    #     export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+    #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+    #     make all
+    #     mkdir -p build
+    #     cd build
+    #     cmake ..
+    #     make
+    #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+    #     $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
+    #       pip install -r requirements.txt
+    # - name: make check
+    #   run: |
+    #     export SALOMELOCALINSTALL=/home/runner/salome
+    #     export SALOMVERSION=9.15.0
+    #     export SALOMEBUILDOS=UB24.04
+    #     export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+    #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests
+    #     $SALOMELOCALINSTALL/$SALOMESRC/salome -t gen_meshes.py
+    #     $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
+    #       export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH && \
+    #       export QT_QPA_PLATFORM=offscreen && \
+    #       echo "PYTHON PATH IS" && \
+    #       echo $PYTHONPATH && \
+    #       $SALOMELOCALINSTALL/$SALOMESRC/salome -t tests.py
+    #     less $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt
+    #     # Save the log file(s) as an artifact
+    #     mkdir -p $GITHUB_WORKSPACE/artifacts
+    #     mv ./*.log ./*.txt  $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt $GITHUB_WORKSPACE/artifacts/ || true
 
     - name: Upload logs
       uses: actions/upload-artifact@v4
