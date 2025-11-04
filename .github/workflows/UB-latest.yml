@@ -292,7 +292,6 @@ jobs:
           wget
         sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
-
     - name: configure
       run: |
         export SALOMELOCALINSTALL=/home/runner/salome
@@ -305,9 +304,12 @@ jobs:
             --header="Referer: https://www.salome-platform.org/" \
             https://files.salome-platform.org/Salome/Salome${SALOMVERSION}/${SALOMESRC}.tar.gz
         tar -xf ${SALOMESRC}.tar.gz
-        mv   $SALOMESRC $SALOMELOCALINSTALL/.
-        cp -r *  $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/meshbooleanplugin/plugins/meshbooleanplugin
-
+        mv $SALOMESRC $SALOMELOCALINSTALL/.
+        cd $SALOMELOCALINSTALL/$SALOMESRC
+        ./install_bin.sh
+        rm -rf $SALOMELOCALINSTALL/$SALOMESRC/INSTALL/meshbooleanplugin
+        cd ..
+        cp -r *  $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin
 
     - name: Patch salome import untill SALOME 10 is released
       run: |
@@ -316,18 +318,23 @@ jobs:
         export SALOMEBUILDOS=UB24.04
         export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
         sed -i 's/from salome\.kernel import salome/import salome/' \
-          $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/meshbooleanplugin/plugins/meshbooleanplugin/tests/gen_meshes.py
+          $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin/tests/gen_meshes.py
         sed -i 's/from salome\.kernel import SMESH\, SALOMEDS/import SMESH\, SALOMEDS/' \
-          $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/meshbooleanplugin/plugins/meshbooleanplugin/tests/gen_meshes.py
+          $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin/tests/gen_meshes.py
 
-
-    # - name: make
-    #   run: |
-    #     export SALOMELOCALINSTALL=/home/runner/salome
-    #     export SALOMVERSION=9.15.0
-    #     export SALOMEBUILDOS=UB24.04
-    #     export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
-    #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+    - name: make
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        export SALOMVERSION=9.15.0
+        export SALOMEBUILDOS=UB24.04
+        export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+        cd $SALOMELOCALINSTALL/$SALOMESRC
+        source ./env_launch.sh
+        cd $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin
+        mkdir build && cd build
+        cmake .. -DUSE_SAT=ON -DCMAKE_INSTALL_LIBDIR:STRING=lib -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=$MESHBOOLEANGPLUGIN_ROOT_DIR
+        make -j
+        make install
     #     make all
     #     mkdir -p build
     #     cd build
@@ -336,6 +343,8 @@ jobs:
     #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
     #     $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
     #       pip install -r requirements.txt
+
+
     # - name: make check
     #   run: |
     #     export SALOMELOCALINSTALL=/home/runner/salome
