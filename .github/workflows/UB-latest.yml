@@ -332,7 +332,7 @@ jobs:
         source ./env_launch.sh
         cd $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin
         mkdir build && cd build
-        cmake .. -DUSE_SAT=ON -DCMAKE_INSTALL_LIBDIR:STRING=lib -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=$MESHBOOLEANGPLUGIN_ROOT_DIR
+        cmake .. -DUSE_SAT=ON -DCMAKE_INSTALL_LIBDIR:STRING=lib -DCMAKE_INSTALL_PREFIX=$MESHBOOLEANGPLUGIN_ROOT_DIR
         make -j
         make install
     #     make all
