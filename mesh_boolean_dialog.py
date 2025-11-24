@@ -524,6 +524,7 @@ that you selected.
     self.updateButton()
 
   def loadResult(self):
+    from mesh_boolean_api import ConvertAlgorithmResult, ImportMedToSmesh
 
     logger.debug(f"return code: {self.worker.returncode}")
     if (self.worker.returncode) != 0:
@@ -533,23 +534,12 @@ that you selected.
 
     #see which algorithm is called to convert the appropriate result into a .med file
     algo = self.getCurrentAlgorithm()
-    if algo == BooleanMeshAlgorithm.CGAL:
-      exec_cgal.convert_result(self.result_file)
-    elif algo == BooleanMeshAlgorithm.MCUT:
-      exec_mcut.convert_result(self.result_file)
-    elif algo == BooleanMeshAlgorithm.CORK:
-      exec_cork.convert_result(self.result_file)
-    elif algo == BooleanMeshAlgorithm.IRMB:
-      exec_irmb.convert_result(self.result_file)
-    elif algo == BooleanMeshAlgorithm.IGL:
-      exec_libigl.convert_result(self.result_file)
-    elif algo == BooleanMeshAlgorithm.VTK:
-      exec_vtk.convert_result(self.result_file)
-
-    smesh.UpdateStudy()
+    #use the ConvertAlgorithmResult function from the API to avoid repeating the same code
+    ConvertAlgorithmResult(algo, self.result_file)
 
     try:
-      (outputMesh, status) = smesh.CreateMeshesFromMED(self.result_file)
+      #Use the ImportMedToSmesh function from the API
+      ImportMedToSmesh(self.result_file, operator_name = self.operator)
     except Exception as e:
       self.restoreCursor()
       return self.error_popup("Result import", e)
