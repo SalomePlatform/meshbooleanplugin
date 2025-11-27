@@ -1,0 +1,371 @@
+name: UB24.04
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.MD'
+      - '**.md'
+      - '**/.gitignore'
+      - '**.png'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.MD'
+      - '**.md'
+      - '**/.gitignore'
+      - '**.png'
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          apt-utils                             \
+          apt-transport-https                   \
+          build-essential                       \
+          binutils                              \
+          bison                                 \
+          build-essential                       \
+          bzip2                                 \
+          clang                                 \
+          cmake                                 \
+          coreutils                             \
+          curl                                  \
+          cython3                               \
+          doxygen                               \
+          dvipng                                \
+          ffmpeg                                \
+          fftw-dev                              \
+          findutils                             \
+          flex                                  \
+          freeglut3-dev                         \
+          ftp                                   \
+          g++                                   \
+          gawk                                  \
+          gdal-data                             \
+          gettext                               \
+          gfortran                              \
+          git                                   \
+          graphviz                              \
+          gzip                                  \
+          hdf5-tools                            \
+          latex-cjk-all                         \
+          lftp                                  \
+          libafterimage-dev                     \
+          libbison-dev                          \
+          libblas-dev                           \
+          libboost-all-dev                      \
+          libboost-dev                          \
+          libbz2-dev                            \
+          libcanberra-gtk-module                \
+          libcgns-dev                           \
+          libclang-dev                          \
+          libcminpack1                          \
+          libcminpack-dev                       \
+          libcmocka-dev                         \
+          libcppunit-1.15-0                     \
+          libcppunit-dev                        \
+          libcurl4-openssl-dev                  \
+          libegl-dev                            \
+          libeigen3-dev                         \
+          libexpat1-dev                         \
+          libffi8                               \
+          libffi-dev                            \
+          libfftw3-dev                          \
+          libfreeimage3                         \
+          libfreeimage-dev                      \
+          libfreetype6                          \
+          libfreetype6-dev                      \
+          libgdal-dev                           \
+          libgeos-dev                           \
+          libgeotiff5                           \
+          libgeotiff-dev                        \
+          libgfortran5                          \
+          libgif-dev                            \
+          libgl1-mesa-dev                       \
+          libgl2ps-dev                          \
+          libgl-dev                             \
+          libgles-dev                           \
+          libglfw3-dev                          \
+          libglu1-mesa-dev                      \
+          libgmp10                              \
+          libgmp-dev                            \
+          libgmpxx4ldbl                         \
+          libgraphviz-dev                       \
+          libgsl-dev                            \
+          libhdf5-dev                           \
+          libidn11-dev                          \
+          libjpeg8-dev                          \
+          libjpeg-dev                           \
+          libjsoncpp-dev                        \
+          liblapack3                            \
+          liblapack-dev                         \
+          liblapacke                            \
+          liblapacke-dev                        \
+          liblz4-1                              \
+          liblz4-dev                            \
+          liblzma5                              \
+          liblzma-dev                           \
+          libmetis5                             \
+          libmetis-dev                          \
+          libmpfr-dev		                        \
+          libmpfr6		                          \
+          libncurses6                           \
+          libncurses-dev                        \
+          libncursesw6                          \
+          libnetcdf-dev                         \
+          libnlopt-cxx-dev                      \
+          libnlopt-dev                          \
+          libomniorb4-dev                       \
+          libomnithread4                        \
+          libomnithread4-dev                    \
+          libopenblas0                          \
+          libopenblas0-serial                   \
+          libopenblas-dev                       \
+          libopencv-dev                         \
+          libopenmpi3                           \
+          libopenmpi-dev                        \
+          libpcre3                              \
+          libpcre3-dev                          \
+          libpng-dev                            \
+          libptscotch-7.0                       \
+          libptscotch-dev                       \
+          libqt5help5                           \
+          libqt5svg5-dev                        \
+          libqt5x11extras5-dev                  \
+          libqwt-qt5-dev                        \
+          libreadline8                          \
+          libreadline-dev                       \
+          libscotch-dev                         \
+          libsqlite3-dev                        \
+          libssl-dev                            \
+          libstdc++-10-dev                      \
+          libstdc++-11-dev                      \
+          libstdc++-12-dev                      \
+          libstdc++-14-dev                      \
+          libtbb12                              \
+          libtbb-dev                            \
+          libtcl8.6                             \
+          libtiff5-dev                          \
+          libtiff-dev                           \
+          libtk8.6                              \
+          libudev1                              \
+          libuuid1                              \
+          libx11-dev                            \
+          libxcb1-dev                           \
+          libxcb-dri2-0-dev                     \
+          libxcb-util0-dev                      \
+          libxcb-util-dev                       \
+          libxcb-xkb-dev                        \
+          libxcursor-dev                        \
+          libxext-dev                           \
+          libxft-dev                            \
+          libxi-dev                             \
+          libxkbcommon-dev                      \
+          libxkbcommon-x11-dev                  \
+          libxml++2.6-2v5                       \
+          libxml++2.6-dev                       \
+          libxml2-dev                           \
+          libxmu-dev                            \
+          libxpm-dev                            \
+          libxrandr-dev                         \
+          libxrender-dev                        \
+          libxsimd-dev                          \
+          libxss-dev                            \
+          libxt-dev                             \
+          libzstd1                              \
+          llvm-dev                              \
+          mesa-utils                            \
+          mesa-utils-extra                      \
+          ncurses-base                          \
+          ncurses-bin                           \
+          ncurses-term                          \
+          omniidl                               \
+          omniorb-idl                           \
+          openmpi-bin                           \
+          openmpi-common                        \
+          openssh-client                        \
+          packagekit-gtk3-module                \
+          patch                                 \
+          perl                                  \
+          petsc-dev                             \
+          psutils                               \
+          pypy3-lib                             \
+          pyqt5-dev                             \
+          pyqt5-dev-tools                       \
+          pyqt5.qsci-dev                        \
+          python3                               \
+          python3 python-is-python3             \
+          python3-distro                        \
+          python3-cairo                         \
+          python3-cbor                          \
+          python3-cffi                          \
+          python3-cftime                        \
+          python3-click                         \
+          python3-cycler                        \
+          python3-decorator                     \
+          python3-dev                           \
+          python3-diff-match-patch              \
+          python3-distlib                       \
+          python3-distro                        \
+          python3-distro-info                   \
+          python3-docutils                      \
+          python3-h5py                          \
+          python3-hamcrest                      \
+          python3-html5lib                      \
+          python3-hyperlink                     \
+          python3-importlib-metadata            \
+          python3-incremental                   \
+          python3-iniconfig                     \
+          python3-joblib                        \
+          python3-kiwisolver                    \
+          python3-libxml2                       \
+          python3-matplotlib                    \
+          python3-matplotlib-inline             \
+          python3-meshio                        \
+          python3-mpi4py                        \
+          python3-netcdf4                       \
+          python3-nlopt                         \
+          python3-nose                          \
+          python3-notebook                      \
+          python3-numpy                         \
+          python3-numpydoc                      \
+          python3-opencv                        \
+          python3-openssl                       \
+          python3-pip                           \
+          python3-protobuf                      \
+          python3-psutil                        \
+          python3-pyqt5                         \
+          python3-pyqt5.qsci                    \
+          python3-pyqt5.qtchart                 \
+          python3-pyqt5.qtxmlpatterns           \
+          python3-pyqt5.sip                     \
+          python3-pytest-cython                 \
+          python3-qtpy                          \
+          python3-reportbug                     \
+          python3-scikit-build-core             \
+          python3-scipy                         \
+          python3-setuptools                    \
+          python3-sip-dev                       \
+          python3-snowballstemmer               \
+          python3-sphinx                        \
+          python3-sphinxcontrib.serializinghtml \
+          python3-sphinxcontrib.websupport      \
+          python3-sphinx-rtd-theme              \
+          python3-statsmodels                   \
+          python3-stemmer                       \
+          python3-toml                          \
+          python3-tomli                         \
+          python3-wheel                         \
+          python-matplotlib-data                \
+          qt5-qmake                             \
+          qt5-qmake-bin                         \
+          qt5-style-plugins                     \
+          qtbase5-dev                           \
+          qtbase5-dev-tools                     \
+          qtchooser                             \
+          qttools5-dev                          \
+          qttools5-dev-tools                    \
+          qtxmlpatterns5-dev-tools              \
+          readline-common                       \
+          rsync                                 \
+          scons                                 \
+          sed                                   \
+          sensible-utils                        \
+          sphinx-common                         \
+          sphinx-intl                           \
+          sphinx-rtd-theme-common               \
+          swig                                  \
+          tar                                   \
+          tcl8.6-dev                            \
+          tcl-dev                               \
+          texlive                               \
+          tk8.6-dev                             \
+          tk-dev                                \
+          wget
+        sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+    - name: configure
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        export SALOMVERSION=9.15.0
+        export SALOMEBUILDOS=UB24.04
+        export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+        mkdir -p $SALOMELOCALINSTALL
+        wget -c \
+            --header="User-Agent: Mozilla/5.0 (X11; Linux x86_64)" \
+            --header="Referer: https://www.salome-platform.org/" \
+            https://files.salome-platform.org/Salome/Salome${SALOMVERSION}/${SALOMESRC}.tar.gz
+        tar -xf ${SALOMESRC}.tar.gz
+        mv $SALOMESRC $SALOMELOCALINSTALL/.
+        cd $SALOMELOCALINSTALL/$SALOMESRC
+        ./install_bin.sh
+        rm -rf $SALOMELOCALINSTALL/$SALOMESRC/INSTALL/meshbooleanplugin
+        cd ..
+        cp -r *  $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin
+
+    - name: Patch salome import untill SALOME 10 is released
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        export SALOMVERSION=9.15.0
+        export SALOMEBUILDOS=UB24.04
+        export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+        sed -i 's/from salome\.kernel import salome/import salome/' \
+          $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin/tests/gen_meshes.py
+        sed -i 's/from salome\.kernel import SMESH\, SALOMEDS/import SMESH\, SALOMEDS/' \
+          $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin/tests/gen_meshes.py
+
+    - name: make
+      run: |
+        export SALOMELOCALINSTALL=/home/runner/salome
+        export SALOMVERSION=9.15.0
+        export SALOMEBUILDOS=UB24.04
+        export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+        cd $SALOMELOCALINSTALL/$SALOMESRC
+        source ./env_launch.sh
+        cd $SALOMELOCALINSTALL/$SALOMESRC/SOURCES/meshbooleanplugin
+        mkdir build && cd build
+        cmake .. -DUSE_SAT=ON -DCMAKE_INSTALL_LIBDIR:STRING=lib -DCMAKE_INSTALL_PREFIX=$MESHBOOLEANGPLUGIN_ROOT_DIR
+        make -j
+        make install
+    #     make all
+    #     mkdir -p build
+    #     cd build
+    #     cmake ..
+    #     make
+    #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin
+    #     $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
+    #       pip install -r requirements.txt
+
+
+    # - name: make check
+    #   run: |
+    #     export SALOMELOCALINSTALL=/home/runner/salome
+    #     export SALOMVERSION=9.15.0
+    #     export SALOMEBUILDOS=UB24.04
+    #     export SALOMESRC=SALOME-$SALOMVERSION-native-$SALOMEBUILDOS-SRC
+    #     cd $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests
+    #     $SALOMELOCALINSTALL/$SALOMESRC/salome -t gen_meshes.py
+    #     $SALOMELOCALINSTALL/$SALOMESRC/salome context && \
+    #       export SMESH_ROOT_DIR=$SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH && \
+    #       export QT_QPA_PLATFORM=offscreen && \
+    #       echo "PYTHON PATH IS" && \
+    #       echo $PYTHONPATH && \
+    #       $SALOMELOCALINSTALL/$SALOMESRC/salome -t tests.py
+    #     less $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt
+    #     # Save the log file(s) as an artifact
+    #     mkdir -p $GITHUB_WORKSPACE/artifacts
+    #     mv ./*.log ./*.txt  $SALOMELOCALINSTALL/$SALOMESRC/BINARIES-$SALOMEBUILDOS/SMESH/share/salome/plugins/smesh/meshbooleanplugin/tests/logs.txt $GITHUB_WORKSPACE/artifacts/ || true
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: check-logs
+        path: $GITHUB_WORKSPACE/artifacts
