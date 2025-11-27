@@ -18,12 +18,11 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-import os, subprocess
+import os
 import tempfile
-import re
-import sys
 import logging
-from salome_utils import verbose, logger, positionVerbosityOfLogger
+from salome.kernel import salome
+from salome.kernel.salome_utils import verbose, logger, positionVerbosityOfLogger
 from meshbooleanplugin.MyPlugDialog_ui import Ui_MyPlugDialog
 from qtsalome import *
 from PyQt5.QtCore import Qt
@@ -41,7 +40,10 @@ from meshbooleanplugin.cgal import exec_cgal
 from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
 import platform
 from enum import Enum
-import time
+
+from salome.smesh import smeshBuilder
+smesh = smeshBuilder.New()
+
 import SalomePyQt
 sgPyQt=SalomePyQt.SalomePyQt()
 
@@ -53,12 +55,12 @@ if debug_plugin or verbose():
   positionVerbosityOfLogger(logging.DEBUG)
 
 class BooleanMeshAlgorithm(str, Enum):
-    CGAL = 'CGAL'
-    IGL  = 'igl'
-    VTK  = 'vtk'
-    IRMB = 'irmb'
-    CORK = 'cork'
-    MCUT = 'mcut'
+  CGAL = 'CGAL'
+  IGL  = 'igl'
+  VTK  = 'vtk'
+  IRMB = 'irmb'
+  CORK = 'cork'
+  MCUT = 'mcut'
 
 OPERATOR_DICT = { 'Union' : 0, 'Intersection' : 1, 'Difference' : 2 }
 METRICS_DICT = { 'Execution Time' : 0, 'Average Quality' : 1 }
@@ -258,31 +260,31 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.COB_Operator.setCurrentIndex(0) # Needed to trigger the graph update
     self.resize(800, 600)
 
-    self.maFenetre = None
+    self.myWindow = None
 
     self.computing = False
     self.result_file = None
 
   def connecterSignaux(self) :
-    self.PB_Close.clicked.connect(self.PBClosePressed)
-    self.PB_Cancel.clicked.connect(self.PBCancelPressed)
-    self.PB_Help.clicked.connect(self.PBHelpPressed)
-    self.PB_Compute.clicked.connect(self.PBComputePressed)
+    self.PB_Close.clicked.connect(self.onPBClosePressed)
+    self.PB_Cancel.clicked.connect(self.onPBCancelPressed)
+    self.PB_Help.clicked.connect(self.onPBHelpPressed)
+    self.PB_Compute.clicked.connect(self.onPBComputePressed)
 
-    self.LE_MeshFile_L.returnPressed.connect(lambda : self.meshFileNameChanged("L"))
-    self.LE_MeshSmesh_L.returnPressed.connect(lambda : self.meshSmeshNameChanged("L"))
-    self.PB_MeshFile_L.clicked.connect(lambda _: self.PBMeshFilePressed("L"))
-    self.PB_MeshSmesh_L.clicked.connect(lambda _: self.PBMeshSmeshPressed("L"))
-    self.LE_MeshFile_R.returnPressed.connect(lambda : self.meshFileNameChanged("R"))
-    self.LE_MeshSmesh_R.returnPressed.connect(lambda : self.meshSmeshNameChanged("R"))
-    self.PB_MeshFile_R.clicked.connect(lambda _: self.PBMeshFilePressed("R"))
-    self.PB_MeshSmesh_R.clicked.connect(lambda _: self.PBMeshSmeshPressed("R"))
+    self.LE_MeshFile_L.returnPressed.connect(lambda : self.onMeshFileNameSelected("L"))
+    self.LE_MeshSmesh_L.returnPressed.connect(lambda : self.onMeshSmeshNameChanged("L"))
+    self.PB_MeshFile_L.clicked.connect(lambda _: self.onPBMeshFilePressed("L"))
+    self.PB_MeshSmesh_L.clicked.connect(lambda _: self.onPBMeshSmeshPressed("L"))
+    self.LE_MeshFile_R.returnPressed.connect(lambda : self.onMeshFileNameSelected("R"))
+    self.LE_MeshSmesh_R.returnPressed.connect(lambda : self.onMeshSmeshNameChanged("R"))
+    self.PB_MeshFile_R.clicked.connect(lambda _: self.onPBMeshFilePressed("R"))
+    self.PB_MeshSmesh_R.clicked.connect(lambda _: self.onPBMeshSmeshPressed("R"))
 
-    self.COB_Operator.currentIndexChanged.connect(self.DisplayOperatorLabel)
-    self.COB_Engine.currentIndexChanged.connect(self.DisplayEngineLabel)
-    self.COB_Metric.currentIndexChanged.connect(self.update_graph)
+    self.COB_Operator.currentIndexChanged.connect(self.displayOperatorLabel)
+    self.COB_Engine.currentIndexChanged.connect(self.displayEngineLabel)
+    self.COB_Metric.currentIndexChanged.connect(self.updateGraph)
 
-  def DisplaySummupLabel(self):
+  def displaySummupLabel(self):
     from PyQt5 import QtCore
     _translate = QtCore.QCoreApplication.translate
     if self.meshIn_L == "" or self.meshIn_R == "":
@@ -318,11 +320,10 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       if algo.value == self.COB_Engine.currentText() :
         return algo
     if platform.system() == "Windows" :
-        return BooleanMeshAlgorithm.IGL
-    else:
-        return BooleanMeshAlgorithm.CGAL
+      return BooleanMeshAlgorithm.IGL
+    return BooleanMeshAlgorithm.CGAL
 
-  def GenObjFromMed(self, zone):
+  def generateObjFromMed(self, zone):
     """zone = L or R"""
     # Get selected mesh or file name
     if zone == "L":
@@ -353,7 +354,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     else:
       self.meshIn_R = objTmpFileName
 
-  def update_graph(self):
+  def updateGraph(self):
     from PyQt5 import QtCore
     _translate = QtCore.QCoreApplication.translate
     data = {}
@@ -389,24 +390,24 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.label_Graph_Title.setText(_translate("MyPlugDialog", f"<-\nPerformences of {engine} on the {self.operator.lower()} operator, measuring the {metric.lower()}."))
 
     self.QP_Benchmark.replot()
-    self.DisplaySummupLabel()
+    self.displaySummupLabel()
 
-  def DisplayOperatorLabel(self):
+  def displayOperatorLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
     for key, val in OPERATOR_DICT.items():
       if self.COB_Operator.currentIndex() == val:
         self.label_Operator.setText(_translate("MyPlugDialog", f"Compute the {key.lower()} of the two meshes selected."))
-    self.update_graph()
+    self.updateGraph()
 
-  def DisplayEngineLabel(self):
+  def displayEngineLabel(self):
     from PyQt5 import QtCore, QtGui, QtWidgets
     _translate = QtCore.QCoreApplication.translate
     self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.getCurrentAlgorithm()]} license."))
     self.label_Benchmark.setText(_translate("MyPlugDialog", ENGINE_BENCHMARK_DICT[self.getCurrentAlgorithm()]))
-    self.update_graph()
+    self.updateGraph()
 
-  def PBHelpPressed(self):
+  def onPBHelpPressed(self):
     QMessageBox.about(self, "About this boolean mesh operation tool",
             """
 This tool allows you to apply boolean
@@ -421,29 +422,29 @@ selected operator, measuring the metric
 that you selected.
             """)
 
-  def prepareFichier(self, zone):
+  def generateInputFiles(self, zone):
     """zone = L or R"""
-    self.GenObjFromMed(zone)
+    self.generateObjFromMed(zone)
   
-  def set_cursor_busy(self):
+  def setCursorBusy(self):
     QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
     self.repaint()
 
-  def restore_cursor(self):
+  def restoreCursor(self):
     QApplication.restoreOverrideCursor()
     self.repaint()
     sgPyQt.processEvents()
 
-# on_compute_finished fonction called with signals afterwards
-  def on_compute_finished(self):
+# onComputeFinished fonction called with signals afterwards
+  def onComputeFinished(self):
     print("Computation finished")
     self.loadResult()
     self.computing= False
-    self.update_button()
-    self.restore_cursor()
+    self.updateButton()
+    self.restoreCursor()
 
-# update_button fonction to enable the 'Cancel' button and disable the 'Compute' one (and vice-versa)
-  def update_button(self):
+# updateButton fonction to enable the 'Cancel' button and disable the 'Compute' one (and vice-versa)
+  def updateButton(self):
     if self.computing:
       self.PB_Compute.setEnabled(False)
       self.PB_Cancel.setEnabled(True)
@@ -454,8 +455,7 @@ that you selected.
     sgPyQt.processEvents()
 
 
-  def PBCancelPressed(self):
-    from salome.kernel import salome
+  def onPBCancelPressed(self):
     logger.debug("Cancel called by user")
   # check that there is a process then stop it if there is
     if self.worker is not None:
@@ -468,45 +468,39 @@ that you selected.
         print(e)
         pass
     self.computing=False
-    self.update_button()
+    self.updateButton()
 
     if salome.sg.hasDesktop():
       salome.sg.updateObjBrowser()
-      self.restore_cursor()
-      computing_box = QMessageBox.about(self, "Compute","Computation canceled by user")
+      self.restoreCursor()
+      QMessageBox.about(self, "Compute","Computation canceled by user")
     else:
       print("Computation canceled by user")
 
-  def PBComputePressed(self):
-    from salome.kernel import salome
+  def onPBComputePressed(self):
     logger.debug("Compute  called by user")
-
-    from salome.kernel import SMESH
-    from salome.kernel import studyedit
-    from salome.smesh import smeshBuilder
-
 
     if self.meshIn_R=="" or self.meshIn_L=="":
       return self.error_popup("Mesh", "select an input mesh")
 
-    self.set_cursor_busy()
+    self.setCursorBusy()
     if self.__selectedMesh_L is not None or not self.meshIn_L.endswith(".obj"):
       try:
-        self.prepareFichier("L")
+        self.generateInputFiles("L")
       except Exception as e:
-          self.restore_cursor()
-          return self.error_popup("Error when converting the left mesh ", e)
+        self.restoreCursor()
+        return self.error_popup("Error when converting the left mesh ", e)
     if self.__selectedMesh_R is not None or not self.meshIn_R.endswith(".obj"):
       try:
-        self.prepareFichier("R")
+        self.generateInputFiles("R")
       except Exception as e:
-          self.restore_cursor()
-          return self.error_popup("Error when converting the right mesh ", e)
+        self.restoreCursor()
+        return self.error_popup("Error when converting the right mesh ", e)
     if not (os.path.isfile(self.meshIn_L)):
-      self.restore_cursor()
+      self.restoreCursor()
       return self.error_popup("File", "unable to read mesh in "+str(self.meshIn_L))
     if not (os.path.isfile(self.meshIn_R)):
-      self.restore_cursor()
+      self.restoreCursor()
       return self.error_popup("File", "unable to read mesh in "+str(self.meshIn_R))
 
     self.result_file = getTmpFileName(suffix=".med",prefix="ForBMC_")
@@ -517,7 +511,7 @@ that you selected.
     self.worker.moveToThread(self.thread)
 
     self.thread.started.connect(self.worker.task)
-    self.worker.finished.connect(self.on_compute_finished)
+    self.worker.finished.connect(self.onComputeFinished)
     self.worker.finished.connect(self.worker.deleteLater)
     self.worker.finished.connect(self.thread.quit)
     self.thread.finished.connect(self.thread.deleteLater)
@@ -527,15 +521,13 @@ that you selected.
 
     self.computing=True
 #   unlock the cancel button
-    self.update_button()
+    self.updateButton()
 
   def loadResult(self):
-    import salome
-    from salome.smesh import smeshBuilder
 
     logger.debug(f"return code: {self.worker.returncode}")
     if (self.worker.returncode) != 0:
-      self.restore_cursor()
+      self.restoreCursor()
       self.error_popup("Error", "Computation ended in error.")
       return
 
@@ -554,16 +546,15 @@ that you selected.
     elif algo == BooleanMeshAlgorithm.VTK:
       exec_vtk.convert_result(self.result_file)
 
-    smesh = smeshBuilder.New()
     smesh.UpdateStudy()
 
     try:
       (outputMesh, status) = smesh.CreateMeshesFromMED(self.result_file)
     except Exception as e:
-      self.restore_cursor()
+      self.restoreCursor()
       return self.error_popup("Result import", e)
     if len(outputMesh) == 0:
-      self.restore_cursor()
+      self.restoreCursor()
       return self.error_popup("Not found", "MED result file not found.")
     outputMesh=outputMesh[0]
     name = ""
@@ -581,17 +572,17 @@ that you selected.
 
     if salome.sg.hasDesktop():
       salome.sg.updateObjBrowser()
-      self.restore_cursor()
-      computing_box = QMessageBox.about(self, "Compute","Computation successfully finished")
+      self.restoreCursor()
+      QMessageBox.about(self, "Compute","Computation successfully finished")
     else:
       print("Computation successfully finished")
 
     return True
 
-  def PBClosePressed(self):
+  def onPBClosePressed(self):
     self.close()
 
-  def PBMeshFilePressed(self, zone):
+  def onPBMeshFilePressed(self, zone):
     """zone = L or R"""
     filter_string = "All mesh formats supported (*.obj *.off *.mesh *.med *.stl);;All Files (*)"
 
@@ -617,17 +608,13 @@ that you selected.
         self.LE_MeshSmesh_R.setText("")
         self.__selectedMesh_R=None
 
-    self.DisplaySummupLabel()
+    self.displaySummupLabel()
 
-  def PBMeshSmeshPressed(self, zone):
+  def onPBMeshSmeshPressed(self, zone):
     """zone = L or R"""
     from omniORB import CORBA
-    from salome.kernel import salome
-    from salome.kernel.salome.kernel import studyedit
     from salome.smesh.smeshstudytools import SMeshStudyTools
     from salome.gui import helper as guihelper
-    from salome.smesh import smeshBuilder
-    smesh = smeshBuilder.New()
 
     mySObject, myEntry = guihelper.getSObjectSelected()
     if CORBA.is_nil(mySObject) or mySObject==None:
@@ -669,9 +656,9 @@ that you selected.
       self.LE_MeshFile_R.setText("")
       self.isFile_R = False
 
-    self.DisplaySummupLabel()
+    self.displaySummupLabel()
 
-  def meshFileNameChanged(self, zone):
+  def onMeshFileNameSelected(self, zone):
     """zone = L or R"""
     if zone == 'L':
       self.meshIn_L=str(self.LE_MeshFile_L.text())
@@ -680,7 +667,7 @@ that you selected.
         self.__selectedMesh_L=None
         self.LE_MeshSmesh_L.setText("")
         #self.currentname = os.path.basename(self.fichierIn)
-        self.DisplaySummupLabel()
+        self.displaySummupLabel()
         return
     else:
       self.meshIn_R=str(self.LE_MeshFile_R.text())
@@ -689,12 +676,12 @@ that you selected.
         self.__selectedMesh_R=None
         self.LE_MeshSmesh_R.setText("")
         #self.currentname = os.path.basename(self.fichierIn)
-        self.DisplaySummupLabel()
+        self.displaySummupLabel()
         return
     QMessageBox.warning(self, "Mesh file", "File doesn't exist")
 
 
-  def meshSmeshNameChanged(self, zone):
+  def onMeshSmeshNameChanged(self, zone):
     """only change by GUI mouse selection, otherwise clear // zone = L or R"""
     if zone == 'L':
       self.__selectedMesh_L = None
@@ -704,7 +691,7 @@ that you selected.
       self.__selectedMesh_R = None
       self.LE_MeshSmesh_R.setText("")
       self.meshIn_R = ""
-    self.DisplaySummupLabel()
+    self.displaySummupLabel()
     return
 
 __dialog=None
