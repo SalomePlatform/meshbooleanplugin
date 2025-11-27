@@ -108,15 +108,15 @@ def check_ok(test, test_number):
 
     # Compute Mesh
     ###
-    res = dialog.PBComputePressed()
+    res = dialog.onPBComputePressed()
     ###
 
-    if dialog.maFenetre is not None:
-        dialog.maFenetre.theClose()
+    if dialog.myWindow is not None:
+        dialog.myWindow.theClose()
 
     # Close the dialog
     ###
-    dialog.PBClosePressed()
+    dialog.onPBClosePressed()
     ###
 
     test.pretty_print()
