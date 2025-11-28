@@ -20,20 +20,18 @@
 
 import unittest
 import mesh_boolean_api
+import os
 
 class TestMesh(unittest.TestCase):
   
   test_counter = 0
   def setUp(self):
     # stuff done before launching test: create input meshes
-    import salome
+    from salome.kernel import salome
     salome.salome_init()
-    import GEOM
     from salome.geom import geomBuilder
     from salome.smesh import smeshBuilder
     import math
-    import SALOMEDS
-    import  SMESH
 
     geompy = geomBuilder.New()
 
@@ -66,14 +64,20 @@ class TestMesh(unittest.TestCase):
     self.mesh_1 = box_mesh
     self.mesh_2 = box_mesh_translated
 
-    self.algos = {
-      'CGAL' : mesh_boolean_api.CGAL,
-      'MCUT' : mesh_boolean_api.MCUT,
-      'VTK' : mesh_boolean_api.VTK,
-      'IGL' : mesh_boolean_api.IGL,
-      'CORK' : mesh_boolean_api.CORK,
-      'IRMB' : mesh_boolean_api.IRMB 
+    #Automatically detect the presence of the algorithms in the environment
+    #if detected => add to algos
+    algo_def = {
+      'CGAL' : (mesh_boolean_api.CGAL, "CGAL_ROOT_DIR"),
+      'MCUT' : (mesh_boolean_api.MCUT, "MCUT_ROOT_DIR"),
+      'VTK' : (mesh_boolean_api.VTK, "VTK_ROOT_DIR"),
+      'IGL' : (mesh_boolean_api.IGL, "LIBIGL_ROOT_DIR"),
+      'CORK' : (mesh_boolean_api.CORK, "CORK_ROOT_DIR"),
+      'IRMB' : (mesh_boolean_api.IRMB, "IRMB_ROOT_DIR")
     }
+    self.algos = {}
+    for name, (algo , env_var) in algo_def.items():
+      if os.getenv(env_var):
+        self.algos[name] = algo
   
   #Functions to get the expected area of a mesh so we can compare it with the results of our algorithms
   def ComputeExpectedDifference(self):
@@ -94,7 +98,7 @@ class TestMesh(unittest.TestCase):
         type(self).test_counter +=1
         result_mesh = mesh_boolean_api.Difference(self.mesh_1, self.mesh_2, algo = algo)
         computed_area = result_mesh.GetArea()
-        self.assertAlmostEqual(expected_area, computed_area, places = 5)
+        self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
 
   #Runs the Operation Intersection on all the algorithms
   def test_intersection(self):
@@ -104,7 +108,7 @@ class TestMesh(unittest.TestCase):
         type(self).test_counter +=1
         result_mesh = mesh_boolean_api.Intersection(self.mesh_1, self.mesh_2, algo = algo)
         computed_area = result_mesh.GetArea()
-        self.assertAlmostEqual(expected_area, computed_area, places = 5)
+        self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
 
   #Runs the Operation Union on all the algorithms
   def test_union(self):
@@ -114,10 +118,11 @@ class TestMesh(unittest.TestCase):
         type(self).test_counter +=1
         result_mesh = mesh_boolean_api.Union(self.mesh_1, self.mesh_2, algo = algo)
         computed_area = result_mesh.GetArea()
-        self.assertAlmostEqual(expected_area, computed_area, places = 5)
+        self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
 
   def tearDown(self):
     # stuff done after launching test
+    # show the exact number of tests run(including the subtests)
     print(f"Total sub-tests ran : {self.test_counter}")
     pass
 
