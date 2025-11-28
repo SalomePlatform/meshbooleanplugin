@@ -3,10 +3,10 @@
 
 import os
 import tempfile
-import salome
+from salome.kernel import salome
 from enum import Enum
 from meshbooleanplugin.mesh_boolean_dialog import runAlgo, BooleanMeshAlgorithm
-from mesh_boolean_utils import meshIOConvert
+from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
 
 from meshbooleanplugin.vtk import exec_vtk
 from meshbooleanplugin.irmb import exec_irmb

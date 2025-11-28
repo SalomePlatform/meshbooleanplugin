@@ -524,7 +524,7 @@ that you selected.
     self.updateButton()
 
   def loadResult(self):
-    from mesh_boolean_api import ConvertAlgorithmResult, ImportMedToSmesh
+    from meshbooleanplugin.mesh_boolean_api import ConvertAlgorithmResult, ImportMedToSmesh
 
     logger.debug(f"return code: {self.worker.returncode}")
     if (self.worker.returncode) != 0:
@@ -539,14 +539,13 @@ that you selected.
 
     try:
       #Use the ImportMedToSmesh function from the API
-      ImportMedToSmesh(self.result_file, operator_name = self.operator)
+      outputMesh = ImportMedToSmesh(self.result_file, operator_name = self.operator)
     except Exception as e:
       self.restoreCursor()
       return self.error_popup("Result import", e)
-    if len(outputMesh) == 0:
+    if not outputMesh:
       self.restoreCursor()
       return self.error_popup("Not found", "MED result file not found.")
-    outputMesh=outputMesh[0]
     name = ""
     if self.operator.lower() == 'union':
       name = self.operator + '_' + str(self.union_num)
