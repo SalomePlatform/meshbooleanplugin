@@ -224,9 +224,6 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.setupUi(self)
     self.connecterSignaux()
     self.commande=""
-    self.union_num=1
-    self.intersection_num=1
-    self.difference_num=1
     self.__selectedMesh_L=None
     self.__selectedMesh_R=None
     self.meshIn_L=""
@@ -425,7 +422,7 @@ that you selected.
   def generateInputFiles(self, zone):
     """zone = L or R"""
     self.generateObjFromMed(zone)
-  
+
   def setCursorBusy(self):
     QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
     self.repaint()
@@ -524,7 +521,7 @@ that you selected.
     self.updateButton()
 
   def loadResult(self):
-    from meshbooleanplugin.mesh_boolean_api import ConvertAlgorithmResult, ImportMedToSmesh
+    from meshbooleanplugin.mesh_boolean_api import convertAlgorithmResult, importMedToSmesh
 
     logger.debug(f"return code: {self.worker.returncode}")
     if (self.worker.returncode) != 0:
@@ -534,29 +531,20 @@ that you selected.
 
     #see which algorithm is called to convert the appropriate result into a .med file
     algo = self.getCurrentAlgorithm()
-    #use the ConvertAlgorithmResult function from the API to avoid repeating the same code
-    ConvertAlgorithmResult(algo, self.result_file)
+    #use the convertAlgorithmResult function from the API to avoid repeating the same code
+    convertAlgorithmResult(algo, self.result_file)
 
     try:
-      #Use the ImportMedToSmesh function from the API
-      outputMesh = ImportMedToSmesh(self.result_file, operator_name = self.operator)
+      #Use the importMedToSmesh function from the API
+      outputMesh = importMedToSmesh(self.result_file, operator_name = self.operator)
     except Exception as e:
       self.restoreCursor()
       return self.error_popup("Result import", e)
     if not outputMesh:
       self.restoreCursor()
       return self.error_popup("Not found", "MED result file not found.")
-    name = ""
-    if self.operator.lower() == 'union':
-      name = self.operator + '_' + str(self.union_num)
-      self.union_num+=1
-    elif self.operator.lower() == 'intersection':
-      name = self.operator + '_' + str(self.intersection_num)
-      self.intersection_num+=1
-    else:
-      name = self.operator + '_' + str(self.difference_num)
-      self.difference_num+=1
-    smesh.SetName(outputMesh.GetMesh(), name)
+    #file naming is now done in the importMedToSmesh function so we can simplify our code
+
 #    outputMesh.Compute() #no algorithms message for "Mesh_x" has been computed with warnings: -  global 1D algorithm is missing
 
     if salome.sg.hasDesktop():
@@ -652,7 +640,7 @@ that you selected.
     if zone == 'L':
       self.meshIn_L=str(self.LE_MeshFile_L.text())
       self.isFile_L=False
-      if os.path.exists(self.meshIn_L): 
+      if os.path.exists(self.meshIn_L):
         self.__selectedMesh_L=None
         self.LE_MeshSmesh_L.setText("")
         #self.currentname = os.path.basename(self.fichierIn)
@@ -661,7 +649,7 @@ that you selected.
     else:
       self.meshIn_R=str(self.LE_MeshFile_R.text())
       self.isFile_R=False
-      if os.path.exists(self.meshIn_R): 
+      if os.path.exists(self.meshIn_R):
         self.__selectedMesh_R=None
         self.LE_MeshSmesh_R.setText("")
         #self.currentname = os.path.basename(self.fichierIn)
