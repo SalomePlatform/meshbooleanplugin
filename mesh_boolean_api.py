@@ -1,10 +1,9 @@
 #Python API for mesh boolean operations in SALOME
-#GUI independent 
+#GUI independent
 
-import os
 import tempfile
 from salome.kernel import salome
-from enum import Enum
+from salome.smesh import smeshBuilder
 from meshbooleanplugin.mesh_boolean_dialog import runAlgo, BooleanMeshAlgorithm
 from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
 
@@ -15,21 +14,20 @@ from meshbooleanplugin.mcut import exec_mcut
 from meshbooleanplugin.libigl import exec_libigl
 from meshbooleanplugin.cgal import exec_cgal
 
-from salome.smesh import smeshBuilder
-union_num = 1
-intersection_num = 1
-difference_num = 1
+_counter = {
+  "union_num" : 1,
+  "intersection_num" : 1,
+  "difference_num" : 1
+}
 
-
-
-def TmpFile(suffix, prefix="BooleanMeshCompute"):
+def tmpFile(suffix, prefix="BooleanMeshCompute"):
   tempdir = tempfile.gettempdir()
   return tempfile.NamedTemporaryFile(suffix=suffix, prefix=prefix, dir=tempdir, delete=False).name
 
 
-def ExportToObj(source):
-  obj_file = TmpFile(".obj")
-  stl_tmp = TmpFile(".stl")
+def exportToObj(source):
+  obj_file = tmpFile(".obj")
+  stl_tmp = tmpFile(".stl")
 
   #Smesh Object
   if hasattr(source, "ExportSTL"):
@@ -56,7 +54,7 @@ CORK = BooleanMeshAlgorithm.CORK
 MCUT = BooleanMeshAlgorithm.MCUT
 
 #Divide the jobs that loadResult does in mesh_boolean_dialog.py
-def ConvertAlgorithmResult(algo, med_file):
+def convertAlgorithmResult(algo, med_file):
   if algo == CGAL:
     exec_cgal.convert_result(med_file)
   elif algo == MCUT:
@@ -72,38 +70,37 @@ def ConvertAlgorithmResult(algo, med_file):
 
 
 #what CreateMeshesFromMed does in mesh_boolean_dialog.py
-def ImportMedToSmesh(med_file, operator_name = None, name = None):
-  global union_num, intersection_num, difference_num
+def importMedToSmesh(med_file, operator_name = None, name = None):
   smesh = smeshBuilder.New()
   smesh.UpdateStudy()
 
   try:
-    meshes, status = smesh.CreateMeshesFromMED(med_file)
+    meshes, _ = smesh.CreateMeshesFromMED(med_file)
   except Exception as e:
     raise RuntimeError(f"Error importing result: {e}")
 
   if not meshes:
     raise RuntimeError("MED result file not found or empty")
-  
+
   mesh = meshes[0]
-  
+
   #The user can set the name manually
   if name :
     smesh.SetName(mesh, name)
   #if name = None automatically set the file names
-  else: 
+  else:
     if operator_name is None:
-      raise Exception("No operator name defined")
+      raise RuntimeError("No operator name defined")
     operator = operator_name.lower()
     if operator == 'union' :
-      auto_name = f"{operator_name}_{union_num}"
-      union_num += 1
+      auto_name = f"{operator_name}_{_counter['union_num']}"
+      _counter["union_num"] += 1
     elif operator == 'intersection' :
-      auto_name = f"{operator_name}_{intersection_num}"
-      intersection_num += 1
+      auto_name = f"{operator_name}_{_counter['intersection_num']}"
+      _counter["intersection_num"]+= 1
     else :
-      auto_name = f"{operator_name}_{difference_num}"
-      difference_num +=1
+      auto_name = f"{operator_name}_{_counter['difference_num']}"
+      _counter["difference_num"] +=1
 
     smesh.SetName(mesh, auto_name)
 
@@ -113,13 +110,13 @@ def ImportMedToSmesh(med_file, operator_name = None, name = None):
     pass
 
   return mesh
- 
-def BooleanOperation(operator_name, mesh_left, mesh_right, algo, name = None):
-  # Convert left and right
-  objL = ExportToObj(mesh_left)
-  objR = ExportToObj(mesh_right)
 
-  med_result = TmpFile(".med")
+def booleanOperation(operator_name, mesh_left, mesh_right, algo, name = None):
+  # Convert left and right
+  objL = exportToObj(mesh_left)
+  objR = exportToObj(mesh_right)
+
+  med_result = tmpFile(".med")
 
   # call runAlgo
   process = runAlgo(algo,
@@ -136,18 +133,18 @@ def BooleanOperation(operator_name, mesh_left, mesh_right, algo, name = None):
       raise RuntimeError("Boolean operation ended in error")
 
   #Convert the result
-  ConvertAlgorithmResult(algo, med_result)
+  convertAlgorithmResult(algo, med_result)
 
   #Import in SALOME
-  return ImportMedToSmesh(med_result, operator_name = operator_name, name = name)
+  return importMedToSmesh(med_result, operator_name = operator_name, name = name)
 
 
 #Mesh boolean operations that can be called in terminal
 def Union(mesh_left, mesh_right, algo, name = None):
-  return BooleanOperation("Union", mesh_left, mesh_right, algo, name = name)
+  return booleanOperation("Union", mesh_left, mesh_right, algo, name = name)
 
 def Difference(mesh_left, mesh_right, algo, name = None):
-  return BooleanOperation("Difference", mesh_left, mesh_right, algo, name = name)
+  return booleanOperation("Difference", mesh_left, mesh_right, algo, name = name)
 
 def Intersection(mesh_left, mesh_right, algo, name = None):
-  return BooleanOperation("Intersection", mesh_left, mesh_right, algo, name = name)
+  return booleanOperation("Intersection", mesh_left, mesh_right, algo, name = name)
