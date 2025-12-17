@@ -1,12 +1,11 @@
 #Python API for mesh boolean operations in SALOME
-#GUI independent
+#no imports from mesh_boolean_dialog = GUI independent
 
 import tempfile
+from enum import Enum
 from salome.kernel import salome
 from salome.smesh import smeshBuilder
-from meshbooleanplugin.mesh_boolean_dialog import runAlgo, BooleanMeshAlgorithm
 from meshbooleanplugin.mesh_boolean_utils import meshIOConvert
-
 from meshbooleanplugin.vtk import exec_vtk
 from meshbooleanplugin.irmb import exec_irmb
 from meshbooleanplugin.cork import exec_cork
@@ -14,11 +13,37 @@ from meshbooleanplugin.mcut import exec_mcut
 from meshbooleanplugin.libigl import exec_libigl
 from meshbooleanplugin.cgal import exec_cgal
 
+#to avoid using global variables
 _counter = {
   "union_num" : 1,
   "intersection_num" : 1,
   "difference_num" : 1
 }
+
+class BooleanMeshAlgorithm(str, Enum):
+  CGAL = 'CGAL'
+  IGL  = 'igl'
+  VTK  = 'vtk'
+  IRMB = 'irmb'
+  CORK = 'cork'
+  MCUT = 'mcut'
+
+def runAlgo(algo, operator, mesh_left, mesh_right, result_file):
+  if algo == BooleanMeshAlgorithm.VTK :
+    p = exec_vtk.VTK_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.IRMB :
+    p = exec_irmb.IRMB_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.CORK :
+    p = exec_cork.cork_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.MCUT :
+    p = exec_mcut.mcut_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.IGL :
+    p = exec_libigl.libigl_main(operator, mesh_left, mesh_right, result_file)
+  elif algo == BooleanMeshAlgorithm.CGAL :
+    p = exec_cgal.cgal_main(operator, mesh_left, mesh_right, result_file)
+  else:
+    raise ValueError("Unknown algorithm!")
+  return p
 
 def tmpFile(suffix, prefix="BooleanMeshCompute"):
   tempdir = tempfile.gettempdir()
