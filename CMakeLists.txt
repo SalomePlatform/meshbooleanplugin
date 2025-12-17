@@ -128,4 +128,8 @@ ELSE ()
   ENDFOREACH()
   #Copy additional script needed for the VTK engine
   INSTALL(FILES "${PROJECT_SOURCE_DIR}/vtk/run_vtk.py" DESTINATION "${Mesh_Boolean_INSTALL_PLUGIN}/vtk")
+  #Copy the API in INSTALL
+  INSTALL(FILES "${PROJECT_SOURCE_DIR}/mesh_boolean_api.py" DESTINATION "${Mesh_Boolean_INSTALL_PLUGIN}")
+  #Copy the testing file in INSTALL
+  INSTALL(FILES "${PROJECT_SOURCE_DIR}/test_meshboolean_api.py" DESTINATION "${Mesh_Boolean_INSTALL_PLUGIN}")
 ENDIF()
