@@ -45,8 +45,11 @@ def runAlgo(algo, operator, mesh_left, mesh_right, result_file):
     raise ValueError("Unknown algorithm!")
   return p
 
-def tmpFile(suffix, prefix="BooleanMeshCompute"):
-  tempdir = tempfile.gettempdir()
+def tmpDir():
+  return tempfile.TemporaryDirectory(prefix="BooleanMeshCompute_")
+
+def tmpFile(suffix, prefix="BooleanMeshCompute", tmp_path= None):
+  tempdir = tmp_path
   return tempfile.NamedTemporaryFile(suffix=suffix, prefix=prefix, dir=tempdir, delete=False).name
 
 
@@ -69,7 +72,6 @@ def exportToObj(source):
     return obj_file
   except Exception as e:
     raise RuntimeError(f"Conversion to OBJ failed: {e}")
-
 
 CGAL = BooleanMeshAlgorithm.CGAL
 IGL = BooleanMeshAlgorithm.IGL
@@ -137,31 +139,36 @@ def importMedToSmesh(med_file, operator_name = None, name = None):
   return mesh
 
 def booleanOperation(operator_name, mesh_left, mesh_right, algo, name = None):
-  # Convert left and right
-  objL = exportToObj(mesh_left)
-  objR = exportToObj(mesh_right)
+  with tmpDir() as tmp_path:
+    print(f"Dossier temporaire cree : {tmp_path}")
+    # Convert left and right
 
-  med_result = tmpFile(".med")
+    objL = exportToObj(mesh_left, tmp_path)
+    objR = exportToObj(mesh_right, tmp_path)
 
-  # call runAlgo
-  process = runAlgo(algo,
-                    operator_name.lower(),
-                    objL,
-                    objR,
-                    med_result
-    )
+    med_result = tmpFile(".med", tmp_path=tmp_path)
 
-  # Wait the end of the process if there is one
-  if process is not None:
-    rc = process.wait()
-    if rc != 0:
-      raise RuntimeError("Boolean operation ended in error")
+    # call runAlgo
+    process = runAlgo(algo,
+                      operator_name.lower(),
+                      objL,
+                      objR,
+                      med_result
+      )
 
-  #Convert the result
-  convertAlgorithmResult(algo, med_result)
+    # Wait the end of the process if there is one
+    if process is not None:
+      rc = process.wait()
+      if rc != 0:
+        raise RuntimeError("Boolean operation ended in error")
 
-  #Import in SALOME
-  return importMedToSmesh(med_result, operator_name = operator_name, name = name)
+    #Convert the result
+    convertAlgorithmResult(algo, med_result)
+
+    #Import in SALOME
+    result_mesh = importMedToSmesh(med_result, operator_name = operator_name, name = name)
+    print(f"Fin, dossier temporaire va etre supprime, sortie de with")
+    return result_mesh
 
 
 #Mesh boolean operations that can be called in terminal
