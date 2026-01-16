@@ -59,6 +59,8 @@ def updateStudy():
 
   global study_name
   salome.salome_init()
+  sgPyQt.processEvents()
+  salome.sg.updateObjBrowser()
 
   if debug_plugin or verbose:
     logger.debug("salome.hasDesktop: %s", salome.hasDesktop())
@@ -331,7 +333,11 @@ that you selected.
     self.thread.started.connect(self.worker.task)
     self.worker.finished.connect(self.onComputeFinished)
     self.worker.finished.connect(self.thread.quit)
-    self.worker.error.connect(lambda e: self.error_popup("Computation error", e))
+    self.worker.error.connect(lambda e: [self.thread.quit(),
+                                         setattr(self,'computing', False),
+                                         self.restoreCursor(),
+                                         self.updateButton(),
+                                         self.error_popup("Computation error", e)])
     self.thread.finished.connect(self.thread.deleteLater)
 #   start the thread(the computation)
     self.thread.start()
@@ -377,18 +383,9 @@ that you selected.
     from salome.smesh.smeshstudytools import SMeshStudyTools
     from salome.gui import helper as guihelper
 
-    # mySObject, myEntry = guihelper.getSObjectSelected()
+    salome.salome_init()
+    mySObject, myEntry = guihelper.getSObjectSelected()
     updateStudy()
-    myEntry = salome.sg.getSelected(0)
-    if not myEntry:
-      logger.debug("No selection found in object browser")
-      self.error_popup("Selection error", "Please select a mesh in the object browser first")
-      return
-    try:
-      mySObject = salome.IDToSObject(myEntry)
-    except Exception as e:
-      logger.error("Failed to get SObject from entry %s: %s", myEntry, e)
-      return
 
     if CORBA.is_nil(mySObject) or mySObject is None:
       QMessageBox.critical(self, "Mesh", "select an input mesh")
