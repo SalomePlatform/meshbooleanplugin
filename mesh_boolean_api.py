@@ -17,6 +17,9 @@ from meshbooleanplugin.mcut import exec_mcut
 from meshbooleanplugin.libigl import exec_libigl
 from meshbooleanplugin.cgal import exec_cgal
 
+# To know if the import is already done
+import_Dump_Done = False
+
 # Dictionary to track naming increments
 _counter = {
   "union_num" : 1,
@@ -116,6 +119,7 @@ def resetCounter():
 #what CreateMeshesFromMed does in mesh_boolean_dialog.py
 def importMedToSmesh(med_file, operator_name = None, name = None):
   """Imports a MED file into the SALOME SMESH study """
+
   smesh = smeshBuilder.New()
   smesh.UpdateStudy()
 
@@ -161,57 +165,91 @@ def booleanOperation(operator_name, mesh_left, mesh_right, algo, name = None, wo
   Main function for boolean operations
   Handles temporary directory lifecycle, file conversion, execution and SALOME import
   """
+  global import_Dump_Done
+  smesh_builder = smeshBuilder.New()
+  # Stop the dump recording before the imports to avoid having useless code in the python dump
+  smesh_builder.PausePythonDumpRecording()
 
   # We now take care of everything related to temporary files management in this fonction rather than in the GUI
-  with tmpDir() as tmp_path:
-    # the with assures that the directory is deleted after the compute or if there is an exception
-    print(f"Temporary directory created: {tmp_path}")
-    # Convert left and right
+  try:
+    with tmpDir() as tmp_path:
+      # the with assures that the directory is deleted after the compute or if there is an exception
+      print(f"Temporary directory created: {tmp_path}")
+      # Convert left and right
 
-    objL = exportToObj(mesh_left, tmp_path)
-    objR = exportToObj(mesh_right, tmp_path)
+      objL = exportToObj(mesh_left, tmp_path)
+      objR = exportToObj(mesh_right, tmp_path)
 
-    med_result = tmpFile(".med", tmp_path=tmp_path)
+      med_result = tmpFile(".med", tmp_path=tmp_path)
 
-    # call runAlgo
-    process = runAlgo(algo,
-                      operator_name.lower(),
-                      objL,
-                      objR,
-                      med_result
-      )
-    if worker is not None:
-      worker.process = process
-    # Wait the end of the process if there is one
-    if process :
-      rc = process.wait()
-      if rc != 0:
-        if worker and not worker._isRunning:
-          print("Process killed by user")
-          return None
-        raise RuntimeError("Boolean operation ended in error")
+      # call runAlgo
+      process = runAlgo(algo,
+                        operator_name.lower(),
+                        objL,
+                        objR,
+                        med_result
+        )
+      if worker is not None:
+        worker.process = process
+      # Wait the end of the process if there is one
+      if process :
+        rc = process.wait()
+        if rc != 0:
+          if worker and not worker._isRunning:
+            print("Process killed by user")
+            return None
+          raise RuntimeError("Boolean operation ended in error")
 
-    if worker and not worker._isRunning:
-      return None
+      if worker and not worker._isRunning:
+        return None
 
-    #Convert the result
-    convertAlgorithmResult(algo, med_result)
+      #Convert the result
+      convertAlgorithmResult(algo, med_result)
 
-    #Import in SALOME
-    result_mesh = importMedToSmesh(med_result, operator_name = operator_name, name = name)
-    print("End of compute, temporary directory will be erased")
-    return result_mesh
+      #Import in SALOME
+      result_mesh = importMedToSmesh(med_result, operator_name = operator_name, name = name)
+
+      #Add to python dump if not already done
+      if not import_Dump_Done:
+        smesh_builder.AddToPythonScript("from meshbooleanplugin import mesh_boolean_api")
+        import_Dump_Done = True
+
+      #Access the IDs of the meshes
+      left_id = salome.ObjectToSObject(mesh_left.GetMesh()).GetID()
+      right_id = salome.ObjectToSObject(mesh_right.GetMesh()).GetID()
+      result_id = salome.ObjectToSObject(result_mesh.GetMesh()).GetID()
+
+      operation_name = operator_name.capitalize()
+      algo_name = f"mesh_boolean_api.{algo.name}"
+
+      cmd = f"{result_id} = mesh_boolean_api.{operation_name}({left_id}, {right_id}, algo = {algo_name})"
+      #Add the command line to the dump study
+      smesh_builder.AddToPythonScript(cmd)
+
+      print("End of compute, temporary directory will be erased")
+      return result_mesh
+  finally:
+    # Resume the recording of the python dump in any case
+    smesh_builder.ResumePythonDumpRecording()
 
 
 #Mesh boolean operations that can be called in terminal
 def Union(mesh_left, mesh_right, algo, name = None):
   """ Performs a Union operation between two meshes """
-  return booleanOperation("Union", mesh_left, mesh_right, algo, name = name)
+  # Essential so that in the python dump : if we receive a study object, we extract the mesh of it
+  # If we select a Mesh object python knows where this objects points and doesn't add .GetMesh() on it
+  if hasattr(mesh_left, "GetMesh") : mesh_left = mesh_left.GetMesh()
+  if hasattr(mesh_right, "GetMesh") : mesh_right = mesh_right.GetMesh()
+  return booleanOperation("union", mesh_left, mesh_right, algo, name = name)
 
 def Difference(mesh_left, mesh_right, algo, name = None):
   """ Performs a Difference operation (left minus right) """
-  return booleanOperation("Difference", mesh_left, mesh_right, algo, name = name)
+  if hasattr(mesh_left, "GetMesh") : mesh_left = mesh_left.GetMesh()
+  if hasattr(mesh_right, "GetMesh") : mesh_right = mesh_right.GetMesh()
+  return booleanOperation("difference", mesh_left, mesh_right, algo, name = name)
 
 def Intersection(mesh_left, mesh_right, algo, name = None):
   """ Performs an Intersection operation between two meshes """
-  return booleanOperation("Intersection", mesh_left, mesh_right, algo, name = name)
+  if hasattr(mesh_left, "GetMesh") : mesh_left = mesh_left.GetMesh()
+  if hasattr(mesh_right, "GetMesh") : mesh_right = mesh_right.GetMesh()
+  return booleanOperation("intersection", mesh_left, mesh_right, algo, name = name)
