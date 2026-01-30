@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 CEA/DES, EDF R&D
+# Copyright (C) 2023-2026 CEA/DES, EDF R&D
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -74,6 +74,10 @@ ELSE ()
   # ===========
   SALOME_SETUP_VERSION(1.0)
 
+  # Use PySide2/Shiboken2 or PyQt5/SIP5
+  # ===================================
+  SET (SALOME_USE_PYSIDE $ENV{SALOME_USE_PYSIDE} CACHE BOOL "Use PySide or PyQt")
+
   SET(SMESH_ROOT_DIR $ENV{SMESH_ROOT_DIR} CACHE PATH "Path to SMESH")
   IF (NOT EXISTS ${SMESH_ROOT_DIR})
     MESSAGE(FATAL_ERROR "SMESH_ROOT_DIR environment variable is missing, please define SMESH_ROOT_DIR")
@@ -86,8 +90,12 @@ ELSE ()
 
   # Python Qt
   # ===========
-  FIND_PACKAGE(SalomePyQt5 REQUIRED)
-  INCLUDE(UsePyQt)
+  IF(SALOME_USE_PYSIDE)
+    INCLUDE(UsePySide)
+  ELSE(SALOME_USE_PYSIDE)
+    FIND_PACKAGE(SalomePyQt5 REQUIRED)
+    INCLUDE(UsePyQt)
+  ENDIF(SALOME_USE_PYSIDE)
 
   SET(_plugin_SCRIPTS
     mesh_boolean_plugin.py
@@ -101,7 +109,11 @@ ELSE ()
   )
 
   # scripts / pyuic wrappings
-  PYQT_WRAP_UIC(_pyuic_SCRIPTS ${_pyuic_FILES} TARGET_NAME _target_name_pyuic)
+  IF(SALOME_USE_PYSIDE)
+     PYSIDE2_WRAP_UIC(_pyuic_SCRIPTS ${_pyuic_FILES} TARGET_NAME _target_name_pyuic)
+  ELSE(SALOME_USE_PYSIDE)
+    PYQT_WRAP_UIC(_pyuic_SCRIPTS ${_pyuic_FILES} TARGET_NAME _target_name_pyuic)
+  ENDIF(SALOME_USE_PYSIDE)
 
   # Installation
   SET(Mesh_Boolean_INSTALL_PLUGIN "plugins/meshbooleanplugin")

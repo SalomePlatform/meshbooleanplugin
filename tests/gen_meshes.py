@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ###
 ### This file is generated automatically by SALOME v9.11.0 with dump python functionality
