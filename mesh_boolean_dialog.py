@@ -24,10 +24,16 @@ import logging
 from salome.kernel import salome
 from salome.kernel.salome_utils import verbose, logger, positionVerbosityOfLogger
 from meshbooleanplugin.MyPlugDialog_ui import Ui_MyPlugDialog
-from qtsalome import *
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
-from PyQt5.QtWidgets import QMessageBox
+from meshbooleanplugin import usePySide
+if usePySide():
+  from PySide2.QtWidgets import QWidget, QMessageBox, QApplication, QFileDialog
+  from PySide2.QtGui import QPixmap, QCursor, QIcon
+  from PySide2.QtCore import Qt, QCoreApplication
+else:
+  from PyQt5.Qt import *
+  from PyQt5.QtCore import Qt
+  from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
+  from PyQt5.QtWidgets import QMessageBox
 import qwt
 
 from meshbooleanplugin.vtk import exec_vtk
@@ -217,10 +223,8 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
   """
   """
   def __init__(self):
-    from PyQt5 import QtCore
     QWidget.__init__(self)
     self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-    self.worker = None
     self.setupUi(self)
     self.connecterSignaux()
     self.commande=""
@@ -234,7 +238,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.meshIn_R=""
     self.isFile_R=False
     self.operator=""
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     self.label_summup.setText(_translate("MyPlugDialog", ""))
 
     # complex with QResources: not used
@@ -285,8 +289,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.COB_Metric.currentIndexChanged.connect(self.updateGraph)
 
   def displaySummupLabel(self):
-    from PyQt5 import QtCore
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     if self.meshIn_L == "" or self.meshIn_R == "":
       self.label_summup.setText(_translate("MyPlugDialog", ""))
       return
@@ -355,8 +358,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
       self.meshIn_R = objTmpFileName
 
   def updateGraph(self):
-    from PyQt5 import QtCore
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     data = {}
     if self.COB_Metric.currentIndex() == METRICS_DICT['Execution Time']:
       data = DIFFERENCE_TIME_DATA
@@ -393,16 +395,14 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.displaySummupLabel()
 
   def displayOperatorLabel(self):
-    from PyQt5 import QtCore, QtGui, QtWidgets
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     for key, val in OPERATOR_DICT.items():
       if self.COB_Operator.currentIndex() == val:
         self.label_Operator.setText(_translate("MyPlugDialog", f"Compute the {key.lower()} of the two meshes selected."))
     self.updateGraph()
 
   def displayEngineLabel(self):
-    from PyQt5 import QtCore, QtGui, QtWidgets
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.getCurrentAlgorithm()]} license."))
     self.label_Benchmark.setText(_translate("MyPlugDialog", ENGINE_BENCHMARK_DICT[self.getCurrentAlgorithm()]))
     self.updateGraph()
