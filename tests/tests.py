@@ -3,7 +3,11 @@ import subprocess
 import sys
 import argparse
 from itertools import permutations
-from PyQt5.QtWidgets import QApplication  # Import QApplication
+from meshbooleanplugin import usePySide
+if usePySide():
+  from PySide2.QtWidgets import QApplication
+else:
+  from PyQt5.QtWidgets import QApplication
 
 sys.path.append(os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh", "meshbooleanplugin"))
 sys.path.append(os.path.join(os.environ["SMESH_ROOT_DIR"], "share", "salome", "plugins", "smesh"))
