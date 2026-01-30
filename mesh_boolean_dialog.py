@@ -29,8 +29,17 @@ from salome_utils import verbose, logger, positionVerbosityOfLogger
 from salome.smesh import smeshBuilder
 import SalomePyQt
 from meshbooleanplugin.MyPlugDialog_ui import Ui_MyPlugDialog
+from meshbooleanplugin import usePySide
+if usePySide():
+  from PySide2.QtWidgets import QWidget, QMessageBox, QApplication, QFileDialog
+  from PySide2.QtGui import QPixmap, QCursor, QIcon
+  from PySide2.QtCore import Qt, QCoreApplication, QThread, QObject, Signal
+else:
+  from PyQt5.Qt import *
+  from PyQt5.QtCore import Qt
+  from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
+  from PyQt5.QtWidgets import QMessageBox
 from meshbooleanplugin.mesh_boolean_api import BooleanMeshAlgorithm, booleanOperation, resetCounter
-from qtsalome import *
 
 salome.salome_init()
 smesh = smeshBuilder.New()
@@ -76,8 +85,12 @@ def updateStudy():
 
 class Worker(QObject):
   """ Worker class to handle boolean computation in a thread """
-  finished = pyqtSignal(object)
-  error = pyqtSignal(str)
+  if usePySide():
+    finished = Signal()
+    error = Signal()
+  else:
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
 
   def __init__(self, algo, operator, mesh_left, mesh_right):
     super(Worker, self).__init__()
@@ -142,7 +155,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
     self.meshIn_R=""
     self.isFile_R=False
     self.operator=""
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     self.label_summup.setText(_translate("MyPlugDialog", ""))
 
     # complex with QResources: not used
@@ -190,7 +203,7 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
   def displaySummupLabel(self):
     """ Updates the summary label with selected meshes and operator """
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     if self.meshIn_L == "" or self.meshIn_R == "":
       self.label_summup.setText(_translate("MyPlugDialog", ""))
       return
@@ -232,13 +245,13 @@ class MeshBooleanDialog(Ui_MyPlugDialog,QWidget):
 
   def displayOperatorLabel(self):
     """ Updates license information text """
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     for key, val in OPERATOR_DICT.items():
       if self.COB_Operator.currentIndex() == val:
         self.label_Operator.setText(_translate("MyPlugDialog", f"Compute the {key.lower()} of the two meshes selected."))
 
   def displayEngineLabel(self):
-    _translate = QtCore.QCoreApplication.translate
+    _translate = QCoreApplication.translate
     self.label_Engine.setText(_translate("MyPlugDialog", f"This engine is used under the {LICENSE_DICT[self.getCurrentAlgorithm()]} license."))
 
   def onPBHelpPressed(self):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 # we use argparse to parse the arguments of the command ligne
 import argparse
