@@ -28,7 +28,7 @@ from meshbooleanplugin import usePySide
 if usePySide():
   from PySide2.QtWidgets import QWidget, QMessageBox, QApplication, QFileDialog
   from PySide2.QtGui import QPixmap, QCursor, QIcon
-  from PySide2.QtCore import Qt, QCoreApplication
+  from PySide2.QtCore import Qt, QCoreApplication, QThread, QObject, Signal
 else:
   from PyQt5.Qt import *
   from PyQt5.QtCore import Qt
@@ -171,8 +171,12 @@ def runAlgo(algo, operator, mesh_left, mesh_right, result_file):
 
 #Worker class for Qthread
 class Worker(QObject):
-  finished = pyqtSignal(str)
-  error = pyqtSignal(str)
+  if usePySide():
+    finished = Signal()
+    error = Signal()
+  else:
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
 
   def __init__(self, algo, operator, mesh_left, mesh_right, result_file):
     super(Worker, self).__init__()
