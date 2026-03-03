@@ -20,7 +20,14 @@
 
 import unittest
 import os
+import tempfile
 from meshbooleanplugin import mesh_boolean_api
+
+def getTmpFileName():
+  tempdir = tempfile.gettempdir()
+  tmp_file = tempfile.NamedTemporaryFile(suffix=".med", prefix='mesh_boolean_', dir=tempdir, delete=False)
+  tmp_filename = tmp_file.name
+  return tmp_filename
 
 class TestMesh(unittest.TestCase):
 
@@ -52,17 +59,22 @@ class TestMesh(unittest.TestCase):
 
     box_mesh = smesh.Mesh(box,'box_mesh')
     algo1D = box_mesh.Segment()
-    LocalLength = algo1D.LocalLength(0.25,None,1e-07)
-    algo2D = box_mesh.Quadrangle(algo=smeshBuilder.QUADRANGLE)
-    algo3D = box_mesh.Hexahedron(algo=smeshBuilder.Hexa)
+    LocalLength = algo1D.LocalLength(0.25)
+    algo2D = box_mesh.Triangle(algo=smeshBuilder.NETGEN_2D)
     isDone = box_mesh.Compute()
     box_mesh.CheckCompute()
 
     box_mesh_translated = box_mesh.TranslateObjectMakeMesh( box_mesh, [ 0.125, 0.125, 0.125 ],
                                                                         0, 'box_mesh_translated')
 
+    self.filename1 = getTmpFileName()
+    self.filename2 = getTmpFileName()
+    box_mesh.ExportMED(self.filename1, version=32)
+    box_mesh_translated.ExportMED(self.filename2, version=32)
+
     self.mesh_1 = box_mesh
     self.mesh_2 = box_mesh_translated
+    self.datasets = [[self.mesh_1, self.mesh_2], [self.filename1, self.filename2]]
 
     #Automatically detect the presence of the algorithms in the environment
     #if detected => add to algos
@@ -95,37 +107,45 @@ class TestMesh(unittest.TestCase):
   def test_difference(self):
     expected_area = self.computeExpectedDifference()
     for algo_name, algo in self.algos.items():
-      with self.subTest(algo = algo_name):
-        #standard way to use the same test for multiple parameters in unittest
-        type(self).test_counter +=1
-        result_mesh = mesh_boolean_api.Difference(self.mesh_1, self.mesh_2, algo = algo)
-        computed_area = result_mesh.GetArea()
-        self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
+      for datasets in self.datasets:
+        mesh_1, mesh_2 = datasets
+        with self.subTest(algo = algo_name):
+          #standard way to use the same test for multiple parameters in unittest
+          type(self).test_counter +=1
+          result_mesh = mesh_boolean_api.Difference(mesh_1, mesh_2, algo = algo)
+          computed_area = result_mesh.GetArea()
+          self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
 
   #Runs the Operation Intersection on all the algorithms
   def test_intersection(self):
     expected_area = self.computeExpectedIntersection()
     for algo_name, algo in self.algos.items():
-      with self.subTest(algo = algo_name):
-        type(self).test_counter +=1
-        result_mesh = mesh_boolean_api.Intersection(self.mesh_1, self.mesh_2, algo = algo)
-        computed_area = result_mesh.GetArea()
-        self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
+      for datasets in self.datasets:
+        mesh_1, mesh_2 = datasets
+        with self.subTest(algo = algo_name):
+          type(self).test_counter +=1
+          result_mesh = mesh_boolean_api.Intersection(mesh_1, mesh_2, algo = algo)
+          computed_area = result_mesh.GetArea()
+          self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
 
   #Runs the Operation Union on all the algorithms
   def test_union(self):
     expected_area = self.computeExpectedUnion()
     for algo_name, algo in self.algos.items():
-      with self.subTest(algo = algo_name):
-        type(self).test_counter +=1
-        result_mesh = mesh_boolean_api.Union(self.mesh_1, self.mesh_2, algo = algo)
-        computed_area = result_mesh.GetArea()
-        self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
+      for datasets in self.datasets:
+        mesh_1, mesh_2 = datasets
+        with self.subTest(algo = algo_name):
+          type(self).test_counter +=1
+          result_mesh = mesh_boolean_api.Union(mesh_1, mesh_2, algo = algo)
+          computed_area = result_mesh.GetArea()
+          self.assertAlmostEqual(expected_area, computed_area, delta = 5e-4)
 
   def tearDown(self):
     # stuff done after launching test
     # show the exact number of tests run(including the subtests)
     print(f"Total sub-tests ran : {self.test_counter}")
+    os.remove(self.filename1)
+    os.remove(self.filename2)
 
 if __name__ == '__main__':
   # launch all tests

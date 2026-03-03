@@ -81,7 +81,12 @@ def exportToObj(source, tmp_path):
 
   # if the source is already a file path
   try:
-    meshIOConvert(str(source), obj_file)
+    # always convert to stl, as some elements types are not available in obj format
+    # converting to stl discard other elements than triangles (and other dimension than 2)
+    # BE CAREFUL: converting with meshIO does not split quadrangles in triangles
+    # whereas SMESH's ExportSTL automatically split quadrangles in triangles
+    meshIOConvert(str(source), stl_tmp)
+    meshIOConvert(stl_tmp, obj_file)
     return obj_file
   except Exception as e:
     raise RuntimeError(f"Conversion to OBJ failed: {e}") from e
@@ -160,6 +165,24 @@ def importMedToSmesh(med_file, operator_name = None, name = None):
 
   return mesh
 
+def getMeshIDOrFilename(mesh):
+  """Get the mesh id in the object browser or its filename.
+     Useful for python dump to work in both cases.
+  """
+  if hasattr(mesh, "GetMesh") :
+    # mesh objet
+    mesh_id = salome.ObjectToSObject(mesh.GetMesh()).GetID()
+  else:
+    # source file
+    mesh_id = f"'{mesh}'"
+  return mesh_id
+
+def getMeshObject(mesh):
+  """Get the mesh object behind the python mesh"""
+  if hasattr(mesh, "GetMesh"):
+    mesh = mesh.GetMesh()
+  return mesh
+
 def booleanOperation(operator_name, mesh_left, mesh_right, algo, name = None, worker=None):
   """
   Main function for boolean operations
@@ -214,9 +237,10 @@ def booleanOperation(operator_name, mesh_left, mesh_right, algo, name = None, wo
         smesh_builder.AddToPythonScript("from meshbooleanplugin import mesh_boolean_api")
         import_Dump_Done = True
 
-      #Access the IDs of the meshes
-      left_id = salome.ObjectToSObject(mesh_left.GetMesh()).GetID()
-      right_id = salome.ObjectToSObject(mesh_right.GetMesh()).GetID()
+      #Access the IDs of the meshes to set the mesh in the python dump
+      left_id = getMeshIDOrFilename(mesh_left)
+      right_id = getMeshIDOrFilename(mesh_right)
+
       result_id = salome.ObjectToSObject(result_mesh.GetMesh()).GetID()
 
       operation_name = operator_name.capitalize()
@@ -238,18 +262,18 @@ def Union(mesh_left, mesh_right, algo, name = None):
   """ Performs a Union operation between two meshes """
   # Essential so that in the python dump : if we receive a study object, we extract the mesh of it
   # If we select a Mesh object python knows where this objects points and doesn't add .GetMesh() on it
-  if hasattr(mesh_left, "GetMesh") : mesh_left = mesh_left.GetMesh()
-  if hasattr(mesh_right, "GetMesh") : mesh_right = mesh_right.GetMesh()
+  mesh_left = getMeshObject(mesh_left)
+  mesh_right = getMeshObject(mesh_right)
   return booleanOperation("union", mesh_left, mesh_right, algo, name = name)
 
 def Difference(mesh_left, mesh_right, algo, name = None):
   """ Performs a Difference operation (left minus right) """
-  if hasattr(mesh_left, "GetMesh") : mesh_left = mesh_left.GetMesh()
-  if hasattr(mesh_right, "GetMesh") : mesh_right = mesh_right.GetMesh()
+  mesh_left = getMeshObject(mesh_left)
+  mesh_right = getMeshObject(mesh_right)
   return booleanOperation("difference", mesh_left, mesh_right, algo, name = name)
 
 def Intersection(mesh_left, mesh_right, algo, name = None):
   """ Performs an Intersection operation between two meshes """
-  if hasattr(mesh_left, "GetMesh") : mesh_left = mesh_left.GetMesh()
-  if hasattr(mesh_right, "GetMesh") : mesh_right = mesh_right.GetMesh()
+  mesh_left = getMeshObject(mesh_left)
+  mesh_right = getMeshObject(mesh_right)
   return booleanOperation("intersection", mesh_left, mesh_right, algo, name = name)
