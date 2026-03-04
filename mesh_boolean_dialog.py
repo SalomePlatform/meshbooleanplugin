@@ -21,9 +21,6 @@
 import os
 import logging
 import platform
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt, QCoreApplication, QThread, pyqtSignal, QObject
-from PyQt5.QtWidgets import QMessageBox
 import salome
 from salome_utils import verbose, logger, positionVerbosityOfLogger
 from salome.smesh import smeshBuilder
@@ -35,10 +32,10 @@ if usePySide():
   from PySide2.QtGui import QPixmap, QCursor, QIcon
   from PySide2.QtCore import Qt, QCoreApplication, QThread, QObject, Signal
 else:
-  from PyQt5.Qt import *
   from PyQt5.QtCore import Qt
+  from PyQt5.QtGui import QPixmap, QCursor, QIcon
   from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
-  from PyQt5.QtWidgets import QMessageBox
+  from PyQt5.QtWidgets import QWidget, QMessageBox, QApplication, QFileDialog
 from meshbooleanplugin.mesh_boolean_api import BooleanMeshAlgorithm, booleanOperation, resetCounter
 
 salome.salome_init()
@@ -110,12 +107,12 @@ class Worker(QObject):
       if not self._isRunning:
         return
       logger.debug("before runAlgo")
-      process = booleanOperation(self.operator, self.mesh_left, self.mesh_right, self.algo, worker=self)
+      self.process = booleanOperation(self.operator, self.mesh_left, self.mesh_right, self.algo, worker=self)
       # using directly the booleanOperation function that takes care of everything ( runalgo and tmpfile)
       logger.debug("in worker.task, self.process: %s", self.process)
       # check if there is a process to call wait
       if self._isRunning:
-        self.finished.emit(self.process)
+        self.finished.emit("OK")
     except Exception as e: # pylint: disable=broad-exception-caught
       if self._isRunning:
         self.error.emit(str(e))
